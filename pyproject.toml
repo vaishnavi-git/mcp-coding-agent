@@ -19,11 +19,6 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Topic :: Software Development",
 ]
-
-[project.urls]
-Homepage = "https://github.com/vaishnavi-git/mcp-coding-agent"
-Documentation = "https://github.com/vaishnavi-git/mcp-coding-agent/tree/main/docs"
-Issues = "https://github.com/vaishnavi-git/mcp-coding-agent/issues"
 dependencies = [
     "anthropic>=2.0",
     "mcp>=2.0",
@@ -36,6 +31,11 @@ dependencies = [
     "uvicorn>=0.30",
     "python-dotenv>=1.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/vaishnavi-git/mcp-coding-agent"
+Documentation = "https://github.com/vaishnavi-git/mcp-coding-agent/tree/main/docs"
+Issues = "https://github.com/vaishnavi-git/mcp-coding-agent/issues"
 
 [project.optional-dependencies]
 ui = ["streamlit>=1.40"]

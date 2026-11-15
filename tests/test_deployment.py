@@ -100,3 +100,14 @@ def test_ci_workflow_lints_and_runs_every_test_with_docker() -> None:
         for step in spec["steps"]:
             if "uses" in step:
                 assert "@" in step["uses"], step  # actions are pinned to a version
+
+
+def test_pyproject_metadata_is_valid() -> None:
+    import tomllib
+
+    project = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text())["project"]
+    # A section header in the wrong place silently moves keys into the wrong table (this broke CI once).
+    assert isinstance(project["dependencies"], list) and any(d.startswith("anthropic") for d in project["dependencies"])
+    assert all(isinstance(url, str) and url.startswith("https://") for url in project["urls"].values())
+    assert set(project["optional-dependencies"]) == {"ui", "dev"}
+    assert project["license"] == {"text": "MIT"} and (PROJECT_ROOT / "LICENSE").is_file()
