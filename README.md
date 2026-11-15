@@ -1,5 +1,6 @@
 # MCP Coding Agent
 
+[![tests](https://github.com/vaishnavi-git/mcp-coding-agent/actions/workflows/tests.yml/badge.svg)](https://github.com/vaishnavi-git/mcp-coding-agent/actions/workflows/tests.yml)
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
