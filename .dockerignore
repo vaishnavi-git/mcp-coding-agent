@@ -1,0 +1,15 @@
+# Keep secrets, local state and caches out of the build context.
+.env
+.env.*
+!.env.example
+data/
+workspaces/
+.venv/
+**/__pycache__/
+**/*.pyc
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+.git/

@@ -1,0 +1,66 @@
+# API and UI in containers; tests run in separate sandbox containers started by the API.
+#
+#   cp .env.example .env                                   # set ANTHROPIC_API_KEY
+#   docker compose build                                   # app image and the sandbox test image
+#   docker compose run --rm api python scripts/setup_sample_repo.py --force
+#   docker compose up
+#
+# Then open http://127.0.0.1:8501 (UI) or http://127.0.0.1:8000/docs (API).
+#
+# SECURITY: the api service mounts the Docker socket so it can start test containers.
+# Access to the socket is equivalent to root on the host. If that is not acceptable,
+# run the API on the host instead (see docs/SETUP.md, "Local install").
+# See docs/SETUP.md for the details and for the settings used below.
+
+x-app: &app
+  build:
+    context: .
+    args:
+      UID: ${UID:-1000}
+      GID: ${GID:-1000}
+  image: mcp-coding-agent:latest
+  env_file: .env
+  restart: unless-stopped
+
+services:
+  api:
+    <<: *app
+    command: ["uvicorn", "app.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      REPO_PATH: /app/workspaces/sample-repo
+      DATA_DIR: /app/data
+      # Repository copies for test runs. The daemon bind-mounts them into the test
+      # container by path, so this directory has the same path on the host and here.
+      SANDBOX_WORK_DIR: ${SANDBOX_WORK_DIR:-/tmp/mcp-agent-sandbox}
+    volumes:
+      - ./workspaces:/app/workspaces
+      - ./data:/app/data
+      - ${SANDBOX_WORK_DIR:-/tmp/mcp-agent-sandbox}:${SANDBOX_WORK_DIR:-/tmp/mcp-agent-sandbox}
+      - /var/run/docker.sock:/var/run/docker.sock
+    group_add:
+      - ${DOCKER_GID:-0}  # group that owns the Docker socket on the host
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      sandbox:
+        condition: service_completed_successfully
+
+  ui:
+    <<: *app
+    command: ["streamlit", "run", "app/ui/streamlit_app.py", "--server.address", "0.0.0.0", "--server.port", "8501", "--server.headless", "true"]
+    environment:
+      AGENT_API_URL: http://api:8000
+    ports:
+      - "127.0.0.1:8501:8501"
+    depends_on:
+      - api
+
+  # Builds the test image (mcp-agent-sandbox:latest) and exits; the API starts
+  # containers from it for every test run.
+  sandbox:
+    build:
+      context: ./sandbox
+    image: ${SANDBOX_IMAGE:-mcp-agent-sandbox:latest}
+    command: ["python", "-c", "print('sandbox image ready')"]
+    network_mode: none
+    restart: "no"

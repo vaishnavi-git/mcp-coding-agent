@@ -1,0 +1,57 @@
+{
+  "_comment": "Documentation sources the agent may read. base_url is the URL prefix that may be read; index (optional) is the site's own search index. Changing this file changes what the agent can reach, so review it like code.",
+  "sources": [
+    {
+      "name": "python",
+      "description": "Python 3 language reference and standard library",
+      "base_url": "https://docs.python.org/3/",
+      "index": {"type": "sphinx", "url": "https://docs.python.org/3/searchindex.js"}
+    },
+    {
+      "name": "pytest",
+      "description": "pytest: fixtures, assertions, parametrization, plugins",
+      "base_url": "https://docs.pytest.org/en/stable/",
+      "index": {"type": "sphinx", "url": "https://docs.pytest.org/en/stable/searchindex.js"}
+    },
+    {
+      "name": "requests",
+      "description": "requests HTTP library",
+      "base_url": "https://requests.readthedocs.io/en/latest/",
+      "index": {"type": "sphinx", "url": "https://requests.readthedocs.io/en/latest/searchindex.js", "page_suffix": "/"}
+    },
+    {
+      "name": "httpx",
+      "description": "HTTPX HTTP client (sync and async)",
+      "base_url": "https://www.python-httpx.org/",
+      "index": {"type": "mkdocs", "url": "https://www.python-httpx.org/search/search_index.json"}
+    },
+    {
+      "name": "mcp",
+      "description": "Model Context Protocol specification and guides",
+      "base_url": "https://modelcontextprotocol.io/",
+      "index": {"type": "llms_txt", "url": "https://modelcontextprotocol.io/llms.txt"}
+    },
+    {
+      "name": "claude-api",
+      "description": "Anthropic Claude API and SDK documentation",
+      "base_url": "https://platform.claude.com/docs/",
+      "index": {"type": "llms_txt", "url": "https://platform.claude.com/llms.txt"}
+    },
+    {
+      "name": "github-docs",
+      "description": "GitHub documentation (Actions, REST API, repositories, pull requests)",
+      "base_url": "https://docs.github.com/en/",
+      "index": {"type": "llms_txt", "url": "https://docs.github.com/llms.txt"}
+    },
+    {
+      "name": "peps",
+      "description": "Python Enhancement Proposals (read only; no search index)",
+      "base_url": "https://peps.python.org/"
+    },
+    {
+      "name": "rfc",
+      "description": "IETF RFCs, e.g. https://www.rfc-editor.org/rfc/rfc9700.html (read only; no search index)",
+      "base_url": "https://www.rfc-editor.org/rfc/"
+    }
+  ]
+}
