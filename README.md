@@ -224,7 +224,7 @@ pytest --cov=app                # with coverage
 GitHub Actions ([.github/workflows/tests.yml](.github/workflows/tests.yml)) runs the linter and the
 full suite, real-Docker test included, on every push and pull request.
 
-The suite has 511 tests. With Docker running and the sandbox image built, all 511 pass; without
+The suite has 512 tests. With Docker running and the sandbox image built, all 512 pass; without
 Docker, the real-Docker test is skipped. Coverage is 86% of `app`, or 92% without the Streamlit UI (line and branch,
 measured on the last full run). Every run ends with a results table for the spec's 11 test
 categories:
