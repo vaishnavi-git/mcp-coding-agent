@@ -23,7 +23,7 @@ from app.config import PROJECT_ROOT
 from tests.test_tool_contracts import CATALOG
 
 DOCS = PROJECT_ROOT / "docs"
-MARKDOWN = sorted([PROJECT_ROOT / "README.md", *DOCS.rglob("*.md"), *(PROJECT_ROOT / "examples").rglob("*.md")])
+MARKDOWN = sorted([PROJECT_ROOT / "README.md", PROJECT_ROOT / "CHANGELOG.md", *DOCS.rglob("*.md"), *(PROJECT_ROOT / "examples").rglob("*.md")])
 
 
 def read(path: Path) -> str:
@@ -143,7 +143,7 @@ def test_docs_have_no_placeholders_or_invented_results() -> None:
     reports = [p for p in (DOCS / "evaluation").glob("results-*") if p.is_file()]
     if not reports:
         assert "No experiments have been run yet" in read(DOCS / "EVALUATION.md")
-        assert "None yet" in read(PROJECT_ROOT / "README.md").split("## Evaluation results", 1)[1].split("##", 1)[0]
+        assert "None yet" in read(PROJECT_ROOT / "README.md").split("## Results", 1)[1].split("##", 1)[0]
 
 
 def test_example_run_says_how_it_was_produced() -> None:
