@@ -45,7 +45,7 @@ Coverage from `pytest --cov=app` (line and branch combined):
 | The whole `app` package | 87% |
 | Without the Streamlit UI (no automated tests; checked by hand) | 92% |
 | Security-critical modules (path guard, filesystem, sandbox, patching, tool loop, MCP hub) | 93% |
-| Evaluation package | 86% |
+| Evaluation package | 89% |
 
 Code that the stdio tests run in subprocesses (each server's `main`) isn't measured.
 

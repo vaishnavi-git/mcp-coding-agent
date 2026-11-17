@@ -189,9 +189,10 @@ pytest -m path_traversal        # one test category
 pytest --cov=app
 ```
 
-There are 625 tests. With Docker running and the sandbox image built they all pass; without
-Docker, the one test that needs it is skipped. CI runs the linter and the whole suite, including
-the Docker test, on every push ([.github/workflows/tests.yml](.github/workflows/tests.yml)).
+There are 625 tests. With Docker running and the three sandbox images built they all pass; without
+Docker, the four tests that need it are skipped. CI builds all three images and runs the linter
+and the whole suite, Docker tests included, on every push
+([.github/workflows/tests.yml](.github/workflows/tests.yml)).
 
 The tests are grouped by risk: path traversal, protected files, dangerous commands, patch
 application, GitHub failures and so on. Each group exercises every entry point rather than one
