@@ -1,6 +1,6 @@
-"""Phase 5: dangerous command rejection, including attempts to get around the test-command allowlist.
+"""Dangerous command rejection, including attempts to get around the test-command allowlist.
 
-The Phase 1 tests cover the obvious cases (rm -rf, sudo, git push --force,
+test_security.py covers the obvious cases (rm -rf, sudo, git push --force,
 shell syntax). These cover ways to smuggle options or other programs past the
 allowlist, check that none of them reaches the sandbox runner, and check that
 neither the model nor the configuration can choose a different command

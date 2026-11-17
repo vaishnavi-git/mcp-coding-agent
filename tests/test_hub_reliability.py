@@ -1,4 +1,4 @@
-"""Phase 4 in the MCP hub: per-call timeouts, and retries only where repeating a call is safe."""
+"""MCP hub reliability: per-call timeouts, and retries only where repeating a call is safe."""
 
 from __future__ import annotations
 

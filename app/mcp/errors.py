@@ -1,4 +1,4 @@
-"""How MCP servers mark temporary errors (Phase 4).
+"""How MCP servers mark temporary errors.
 
 A tool error whose text contains ``[temporary]`` (optionally
 ``[temporary, retry after 30s]``) failed for a reason that may go away by

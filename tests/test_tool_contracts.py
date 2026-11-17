@@ -1,4 +1,4 @@
-"""Phase 5: the tool catalog as a reviewed contract (discovery), a valid call for every tool, and invalid arguments.
+"""The tool catalog as a reviewed contract (discovery), a valid call for every tool, and invalid arguments.
 
 The catalog test pins every tool's server, risk class and required arguments.
 Adding a tool, or changing what an existing one declares, fails here until the

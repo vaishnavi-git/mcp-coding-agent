@@ -1,4 +1,4 @@
-"""Phase 6: the documentation stays true to the code.
+"""The documentation stays true to the code.
 
 Each check compares a document with the code it describes: settings, routes,
 the OpenAPI schema, the tool table, the workflow diagram, links and anchors,

@@ -1,4 +1,4 @@
-"""Phase 2 GitHub tools: branch, commit, push (never forced), pull request; fixture and API modes."""
+"""GitHub tools: branch, commit, push (never forced), pull request; fixture and API modes."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Phase 4 end to end: budgets, retries, structured failures, recovery and approval checkpoints.
+"""Reliability end to end: budgets, retries, structured failures, recovery and approval checkpoints.
 
 Real MCP servers in-process, a scripted model that reports token usage, and
 (where the test needs exact test results) a fake sandbox runner.

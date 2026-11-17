@@ -1,6 +1,6 @@
-"""Phase 5: pull-request creation end to end in API mode.
+"""Pull-request creation end to end in API mode.
 
-The Phase 2 tests publish in fixture mode (a local bare remote and pull
+test_publication_workflow.py publishes in fixture mode (a local bare remote and pull
 requests stored as JSON). Here the GitHub server runs in API mode: the branch
 is pushed with real git to a local bare repository standing in for
 github.com, and the pull request goes to a mock GitHub API, so the exact

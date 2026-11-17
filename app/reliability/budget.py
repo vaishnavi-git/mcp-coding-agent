@@ -1,4 +1,4 @@
-"""Run budget (Phase 4): maximum tool calls, maximum model calls, maximum task cost.
+"""Run budget: maximum tool calls, maximum model calls, maximum task cost.
 
 Usage is read from the audit database rather than kept in memory, so a run's
 budget covers every invocation of that run (start, each approval, each retry)

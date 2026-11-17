@@ -1,4 +1,4 @@
-"""Phase 5: test timeout handling and failed-test recovery, end to end through the workflow.
+"""Test timeout handling and failed-test recovery, end to end through the workflow.
 
 Timeouts happen at two levels: the sandbox kills a test run at
 SANDBOX_TIMEOUT_SECONDS (the run is reported as TIMED OUT and the model gets

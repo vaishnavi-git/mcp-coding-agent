@@ -1,4 +1,4 @@
-"""Phase 3 network rules: URL policy and the guarded fetcher (mock transport, no network)."""
+"""Network rules for the docs reader: URL policy and the guarded fetcher (mock transport, no network)."""
 
 from __future__ import annotations
 

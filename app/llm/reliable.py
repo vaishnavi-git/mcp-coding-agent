@@ -1,4 +1,4 @@
-"""Retries and budget checks around any LLMProvider (Phase 4).
+"""Retries and budget checks around any LLMProvider.
 
 Every model call in the workflow goes through ``ReliableProvider``:
 

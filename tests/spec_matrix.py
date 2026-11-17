@@ -1,10 +1,10 @@
-"""Which tests cover each test category in the project spec (Phase 5).
+"""Which tests cover each test category in the project spec.
 
 ``conftest.py`` turns this mapping into pytest markers, so one category can be
 run on its own (``pytest -m path_traversal``), and every run ends with a table
 of results per category. ``test_spec_matrix.py`` fails if a listed test no
-longer exists, if a category has too few tests, or if a Phase 5 test is not
-listed anywhere.
+longer exists, if a category has too few tests, or if a test in one of the
+category files is not listed anywhere.
 
 Entries are ``<file>::<test function>``; every parametrized case of the
 function belongs to the category. A test can be in more than one category.
@@ -26,8 +26,8 @@ SPEC_CATEGORIES: dict[str, str] = {
     "pull_requests": "Pull-request creation",
 }
 
-# Test files written for Phase 5; every test in them must be in at least one category.
-PHASE5_FILES = (
+# Test files written around these categories; every test in them must be in at least one category.
+CATEGORY_FILES = (
     "test_tool_contracts.py",
     "test_access_control.py",
     "test_command_policy.py",

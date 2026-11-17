@@ -4,7 +4,7 @@ The model only sees the tools the node allows. Every requested call is checked
 (allowed? schema-valid? budget left?) before it reaches an MCP server, and
 every result, including rejections, goes back to the model as a tool result.
 
-Two limits apply (Phase 4):
+Two limits apply:
 - per step (``max_tool_calls``): every call the model requests counts,
   including rejected ones, so a model that keeps sending invalid calls stops;
 - per run (``budget``): calls that would reach a server are refused once the
@@ -12,7 +12,7 @@ Two limits apply (Phase 4):
 Either way the model gets one more turn to answer without tools; if it still
 asks for tools, the loop ends.
 
-Arguments the tool's schema does not declare are rejected (Phase 5): MCP
+Arguments the tool's schema does not declare are rejected: MCP
 servers ignore them, so a typo such as ``end_lines`` would otherwise be
 dropped silently. Every rejected call is logged as a ``tool_rejected`` audit
 event; calls that reach a server are logged by the hub.

@@ -1,4 +1,4 @@
-"""Phase 3 in the workflow: the model may consult documentation; what it read is recorded and cited."""
+"""Documentation in the workflow: the model may consult documentation; what it read is recorded and cited."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Phase 2 workflow: tests pass -> publication checkpoint -> branch / commit / push / pull request."""
+"""Publication workflow: tests pass -> publication checkpoint -> branch / commit / push / pull request."""
 
 from __future__ import annotations
 

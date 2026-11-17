@@ -24,7 +24,7 @@ pytestmark = pytest.mark.anyio
         ({"read_only_hint": False, "destructive_hint": False, "open_world_hint": False}, Risk.WRITE),
         ({"read_only_hint": False, "destructive_hint": False, "open_world_hint": True}, Risk.EXTERNAL),
         ({"read_only_hint": False, "destructive_hint": True}, Risk.DESTRUCTIVE),
-        ({}, Risk.DESTRUCTIVE),  # unannotated tools get the spec's most conservative defaults
+        ({}, Risk.DESTRUCTIVE),  # unannotated tools get the MCP specification's most conservative defaults
     ],
 )
 def test_classify_risk(annotations: dict, risk: Risk) -> None:

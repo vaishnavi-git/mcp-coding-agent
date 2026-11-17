@@ -1,4 +1,4 @@
-"""The spec-to-test mapping stays true: listed tests exist, categories are covered, Phase 5 tests are listed."""
+"""The category-to-test mapping stays true: listed tests exist, categories are covered, category files are fully listed."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import sys
 import pytest
 
 from app.config import PROJECT_ROOT
-from tests.spec_matrix import MIN_TESTS_PER_CATEGORY, PHASE5_FILES, SPEC_CATEGORIES, SPEC_MATRIX, marker_index
+from tests.spec_matrix import CATEGORY_FILES, MIN_TESTS_PER_CATEGORY, SPEC_CATEGORIES, SPEC_MATRIX, marker_index
 
 
 def functions_in(file: str) -> set[str]:
@@ -34,9 +34,9 @@ def test_every_listed_test_exists() -> None:
     assert missing == [], "renamed or deleted tests are still listed in tests/spec_matrix.py"
 
 
-def test_every_phase5_test_is_in_a_category() -> None:
+def test_every_category_file_test_is_listed() -> None:
     listed = set(marker_index())
-    unlisted = [f"{file}::{name}" for file in PHASE5_FILES for name in sorted(functions_in(file)) if f"{file}::{name}" not in listed]
+    unlisted = [f"{file}::{name}" for file in CATEGORY_FILES for name in sorted(functions_in(file)) if f"{file}::{name}" not in listed]
     assert unlisted == []
 
 

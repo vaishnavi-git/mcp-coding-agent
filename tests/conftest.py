@@ -9,7 +9,7 @@ from app.config import PROJECT_ROOT, Settings
 from app.sample_repo import setup_sample_repo
 from tests.spec_matrix import SPEC_CATEGORIES, marker_index
 
-# ---------------------------------------------------------------------- spec categories (Phase 5)
+# ---------------------------------------------------------------------- spec categories
 _RANK = {"passed": 0, "skipped": 1, "failed": 2, "error": 2}
 _CATEGORIES_BY_NODE = pytest.StashKey[dict[str, set[str]]]()
 

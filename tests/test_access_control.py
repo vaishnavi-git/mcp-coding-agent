@@ -1,4 +1,4 @@
-"""Phase 5: path traversal and unauthorized file access, tried through every entry point.
+"""Path traversal and unauthorized file access, tried through every entry point.
 
 Each attack is sent through the real MCP servers (read, search, patch,
 apply, git diff, commit, test command, sandbox copy), not just the PathGuard

@@ -1,4 +1,4 @@
-"""Structured failure records (Phase 4).
+"""Structured failure records.
 
 Every failed run carries one ``Failure``: a stable ``code`` for programs and
 evaluation scripts, the ``step`` where it happened, the ``message`` (what went

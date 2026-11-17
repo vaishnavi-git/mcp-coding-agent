@@ -1,4 +1,4 @@
-"""Phase 6: evaluation metrics and run reports, checked against runs with known outcomes.
+"""Evaluation metrics and run reports, checked against runs with known outcomes.
 
 The runs are real workflow runs (real MCP servers, real approvals, a scripted
 model and canned test results), recorded in one audit database. The expected

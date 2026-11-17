@@ -54,7 +54,7 @@ class Settings:
     github_token: str | None
     github_issues_file: Path | None
     github_api_url: str
-    # GitHub publishing (Phase 2)
+    # GitHub publishing
     github_default_branch: str
     github_branch_prefix: str
     github_pr_draft: bool
@@ -70,7 +70,7 @@ class Settings:
     sandbox_work_dir: Path | None  # where repository copies for test runs go (None: system temp dir)
     test_command: str
     test_command_allowlist: tuple[str, ...]
-    # Documentation server (Phase 3)
+    # Documentation server
     docs_enabled: bool
     docs_sources_file: Path
     docs_timeout_seconds: float
@@ -82,7 +82,7 @@ class Settings:
     max_tool_calls_per_step: int
     max_fix_attempts: int
     max_revisions: int
-    # Reliability (Phase 4)
+    # Reliability
     max_tool_calls_per_run: int
     max_llm_calls_per_run: int
     max_task_cost_usd: float  # 0 disables the cost limit

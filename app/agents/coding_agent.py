@@ -10,7 +10,7 @@
                           +-------------------+
     any failure / final outcome -> finalize -> END
 
-The ordering rules from the spec are enforced by the graph and by guards in
+The ordering rules are enforced by the graph and by guards in
 the nodes, not just by prompts:
 - the plan is produced only after the issue has been read;
 - patches are proposed only after at least one repository search succeeded;
@@ -21,11 +21,11 @@ the nodes, not just by prompts:
 - GitHub write tools (branch, commit, push, pull request) are never offered to
   the model: the publish node runs only the steps the human approved, with the
   exact values shown at the approval checkpoint;
-- documentation tools (Phase 3) are read-only and optional: when the docs
+- documentation tools are read-only and optional: when the docs
   server is connected the model may use them while investigating and
   proposing, and every page it reads is recorded and cited in the PR.
 
-Reliability (Phase 4): every step is wrapped so that it checks the run budget
+Reliability: every step is wrapped so that it checks the run budget
 before it starts (model calls and cost for steps that use the model, tool
 calls for steps that call tools), records a timeline entry, and turns an
 expected failure into a structured ``failure`` record instead of crashing.
@@ -583,7 +583,7 @@ def build_graph(deps: AgentDeps | None) -> StateGraph:
         failure = make_failure("tests_failed", "run_tests", message)
         return {"recovery_decisions": [record], "recovery": {}, "status": "tests_failed", "error": f"run_tests: {message}", "failure": failure}
 
-    # ------------------------------------------------------------------ Phase 2: publication
+    # ------------------------------------------------------------------ publication
     async def draft_publication(state: AgentState) -> dict[str, Any]:
         deps_ = d()
         if not state.get("tests_passed"):

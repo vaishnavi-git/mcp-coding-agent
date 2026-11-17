@@ -1,4 +1,4 @@
-"""Phase 5: patch application through the filesystem server and the workflow.
+"""Patch application through the filesystem server and the workflow.
 
 test_patching.py covers the parser and applier as units. These tests check
 what reaches the disk: only the changed lines change (line endings and the

@@ -268,7 +268,7 @@ async def test_fix_attempts_are_limited(settings) -> None:
     view = await runner.start(42)
     run_id = view["run"]["id"]
     view = await runner.resume(run_id, approved=True)
-    # Phase 4: with no attempts left the run pauses at the recovery checkpoint instead of ending.
+    # With no attempts left the run pauses at the recovery checkpoint instead of ending.
     assert view["run"]["status"] == "awaiting_approval"
     assert view["pending_approval"]["kind"] == "recovery" and view["pending_approval"]["reason"] == "fix_attempts_exhausted"
     assert len(view["state"]["test_runs"]) == 1
@@ -283,7 +283,7 @@ async def test_docker_unavailable_fails_after_apply(settings) -> None:
     view = await runner.start(42)
     run_id = view["run"]["id"]
     view = await runner.resume(run_id, approved=True)
-    # Phase 4: the run pauses so a human can start Docker and re-run the tests, or stop.
+    # The run pauses so a human can start Docker and re-run the tests, or stop.
     assert view["pending_approval"]["kind"] == "recovery" and view["pending_approval"]["reason"] == "tests_could_not_run"
     assert "Docker is not installed" in view["pending_approval"]["message"]
     view = await runner.resume(run_id, approved=False)
@@ -312,7 +312,7 @@ async def test_tool_loop_rejects_unknown_tools_bad_arguments_and_enforces_budget
         )
     assert result.hit_limit
     outcomes = [(c.tool, c.is_error) for c in result.calls]
-    # Every requested call counts toward the per-step limit, rejected ones included (Phase 4).
+    # Every requested call counts toward the per-step limit, rejected ones included.
     assert outcomes[0] == ("apply_patch", True) and "not available" in result.calls[0].text
     assert outcomes[1] == ("read_repository_file", True) and "INVALID_ARGUMENTS" in result.calls[1].text
     assert outcomes[2] == ("read_repository_file", True) and "outside" in result.calls[2].text

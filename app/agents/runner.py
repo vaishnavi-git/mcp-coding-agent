@@ -6,7 +6,7 @@ until the next interrupt or the end, then closes everything. Runs therefore
 survive process restarts: the API can be restarted while a run waits for
 approval.
 
-Phase 4:
+Also:
 - every invocation gets a ``RunBudget`` (tool calls, model calls, cost) whose
   usage comes from the audit database, and a provider wrapped in
   ``ReliableProvider`` (retries with backoff, budget check before each call);
@@ -183,7 +183,7 @@ class AgentRunner:
             decision["edits"] = {k: v for k, v in edits.items() if v is not None}
         return await self._invoke(run_id, Command(resume=decision))
 
-    # ------------------------------------------------------------------ retry (Phase 4)
+    # ------------------------------------------------------------------ retry
     async def _resume_point(self, run_id: str) -> tuple[str, str | None, dict[str, Any] | None]:
         """Where a retry would continue: (kind, step, config).
 

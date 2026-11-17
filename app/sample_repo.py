@@ -1,6 +1,6 @@
 """Create a fresh git checkout of the bundled sample repository.
 
-A local bare repository next to it acts as ``origin``, so the Phase 2
+A local bare repository next to it acts as ``origin``, so the
 publishing flow (push + pull request in fixture mode) works without GitHub.
 """
 

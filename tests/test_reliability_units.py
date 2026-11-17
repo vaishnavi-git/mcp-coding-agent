@@ -1,4 +1,4 @@
-"""Phase 4 building blocks: retry policy, reliable provider, prices and budget, failures, test analysis."""
+"""Reliability building blocks: retry policy, reliable provider, prices and budget, failures, test analysis."""
 
 from __future__ import annotations
 

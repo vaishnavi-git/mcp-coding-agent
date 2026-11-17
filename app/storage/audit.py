@@ -1,8 +1,8 @@
 """SQLite persistence: run index, tool-call log, LLM-call log and workflow events.
 
-Phase 4 adds per-call cost, retry attempt numbers, a structured failure record
-per run, and a usage query that the run budget reads (so limits hold across
-restarts). Databases created by earlier phases are migrated in place.
+Besides the logs it keeps per-call cost, retry attempt numbers, a structured
+failure record per run, and a usage query that the run budget reads (so limits
+hold across restarts). Older databases are migrated in place.
 
 What is stored on purpose:
 - tool calls: server, tool, node, redacted arguments, and *metadata* about the
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS runs (
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     error TEXT,
-    failure TEXT,                   -- JSON failure record (Phase 4)
+    failure TEXT,                   -- JSON failure record
     instructions TEXT               -- extra guidance given at start (needed to retry from scratch)
 );
 CREATE TABLE IF NOT EXISTS tool_calls (
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS tool_calls (
     result_lines INTEGER,
     result_sha256 TEXT,
     result_head TEXT,               -- first line only, redacted
-    attempt INTEGER                 -- 1 for the first try, 2+ for automatic retries (Phase 4)
+    attempt INTEGER                 -- 1 for the first try, 2+ for automatic retries
 );
 CREATE TABLE IF NOT EXISTS llm_calls (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS llm_calls (
     stop_reason TEXT,
     request_id TEXT,
     error TEXT,
-    cost_usd REAL                   -- tokens x configured price; NULL if unknown or failed (Phase 4)
+    cost_usd REAL                   -- tokens x configured price; NULL if unknown or failed
 );
 CREATE TABLE IF NOT EXISTS events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -83,7 +83,7 @@ CREATE INDEX IF NOT EXISTS llm_calls_run ON llm_calls(run_id, id);
 CREATE INDEX IF NOT EXISTS events_run ON events(run_id, id);
 """
 
-# Columns added after Phase 1; added to existing databases on open.
+# Columns added after the first schema version; added to existing databases on open.
 MIGRATIONS = {
     "runs": {"failure": "TEXT", "instructions": "TEXT"},
     "tool_calls": {"attempt": "INTEGER"},

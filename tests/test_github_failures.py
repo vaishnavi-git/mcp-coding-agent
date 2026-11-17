@@ -1,4 +1,4 @@
-"""Phase 5: GitHub API failures, from odd HTTP responses up to a GitHub outage in the middle of a run.
+"""GitHub API failures, from odd HTTP responses up to a GitHub outage in the middle of a run.
 
 test_github_server.py and test_github_publish.py cover the common status codes
 (401, 403, 404, 422, 429, 5xx, network errors). These add the responses that

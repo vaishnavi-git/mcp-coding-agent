@@ -162,7 +162,7 @@ def test_logs_contain_metadata_but_no_key_or_source(caplog: pytest.LogCaptureFix
 
 
 def test_sdk_retries_are_off_and_the_agent_retries_with_backoff_and_cost(tmp_path) -> None:
-    """Phase 4: 529 overloaded twice, then success. Every attempt is logged; only the success is billed."""
+    """529 overloaded twice, then success. Every attempt is logged; only the success is billed."""
     from app.config import PROJECT_ROOT
     from app.llm.reliable import ReliableProvider
     from app.reliability.budget import BudgetLimits, RunBudget, load_pricing

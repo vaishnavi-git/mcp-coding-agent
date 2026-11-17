@@ -1,4 +1,4 @@
-"""Phase 3 documentation server: page conversion, search indexes, MCP tools (fake web, no network)."""
+"""Documentation server: page conversion, search indexes, MCP tools (fake web, no network)."""
 
 from __future__ import annotations
 

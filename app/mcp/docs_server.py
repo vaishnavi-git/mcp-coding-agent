@@ -1,10 +1,5 @@
 """Documentation MCP server: search and read an allowlist of technical documentation.
 
-Phase 3 of the spec: "a browser or documentation MCP server that allows the
-agent to read technical documentation ... restricted to documentation and
-research tasks. It must not log in to websites or perform unrelated account
-actions."
-
 This is a reader, not a browser engine: it fetches pages with GET, converts
 them to text, and never runs JavaScript, fills forms, or keeps cookies. It can
 only reach the URL prefixes in the sources file (``config/docs_sources.json``),

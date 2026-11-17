@@ -3,9 +3,9 @@
 The hub learns each tool's name, description, JSON schema and annotations
 from ``tools/list`` at start-up. Nothing about GitHub, files or tests is
 hardcoded here; the risk level of each tool is derived from the standard MCP
-annotations (with the spec's conservative defaults) and can be overridden.
+annotations (with the MCP specification's conservative defaults) and can be overridden.
 
-Reliability (Phase 4):
+Reliability:
 - every call has a deadline (the server's ``timeout_seconds``); a timeout
   becomes a tool error that names the tool and the limit;
 - errors a server marks ``[temporary]`` (and timeouts, where the server allows
@@ -272,7 +272,7 @@ def stdio_server_configs(settings: Settings) -> list[ServerConfig]:
     """Launch each server as its own process with a minimal environment.
 
     Only the GitHub server receives GITHUB_TOKEN; no server receives the
-    Anthropic API key. The docs server (Phase 3) gets no credentials at all
+    Anthropic API key. The docs server gets no credentials at all
     and ignores proxy and .netrc settings.
     """
     base_env = {**get_default_environment(), "PYTHONPATH": str(PROJECT_ROOT), "PYTHONUNBUFFERED": "1"}

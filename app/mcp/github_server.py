@@ -1,4 +1,4 @@
-"""GitHub MCP server: read issues (Phase 1); branch, commit, push, pull request (Phase 2).
+"""GitHub MCP server: read issues; branch, commit, push, pull request.
 
 Backends:
 - ``api``: GitHub REST API. Use a fine-grained token limited to the target
@@ -60,7 +60,7 @@ class GitHubSettings:
     web_url: str = "https://github.com"
     issues_file: Path | None = None
     timeout_seconds: float = 20.0
-    # Phase 2: local repository and publishing rules
+    # Local repository and publishing rules
     repo_path: Path | None = None
     default_branch: str = "main"
     branch_prefix: str = "agent/"
@@ -333,7 +333,7 @@ def build_server(settings: GitHubSettings) -> MCPServer:
             raise ToolError("refusing to use the default branch name")
         return name
 
-    # ------------------------------------------------------------------ Phase 1
+    # ------------------------------------------------------------------ issues
     @server.tool(annotations=READ_REMOTE)
     def get_github_issue(issue_number: int) -> str:
         """Read a GitHub issue: title, state, labels, description and comments.
@@ -345,7 +345,7 @@ def build_server(settings: GitHubSettings) -> MCPServer:
             raise ToolError("issue_number must be a positive integer")
         return format_issue(backend.issue(issue_number), settings.repository)
 
-    # ------------------------------------------------------------------ Phase 2
+    # ------------------------------------------------------------------ publishing
     @server.tool(annotations=LOCAL_WRITE)
     def create_branch(branch_name: str) -> dict:
         """Create and switch to a new local branch; uncommitted changes carry over. Requires approval.

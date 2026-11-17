@@ -1,4 +1,4 @@
-"""Evaluation (Phase 6): metrics computed from recorded runs, and readable run reports.
+"""Evaluation: metrics computed from recorded runs, and readable run reports.
 
 Nothing here runs the agent or estimates anything: every number comes from
 the audit database and the LangGraph checkpoints of runs that actually

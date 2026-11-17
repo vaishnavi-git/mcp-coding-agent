@@ -1,4 +1,4 @@
-"""Phase 6: static checks of the Docker files, and the sandbox work directory they rely on.
+"""Static checks of the Docker files, and the sandbox work directory they rely on.
 
 Docker is not available where these tests were written, so the images are
 never built here. These checks catch the mistakes that matter most without
