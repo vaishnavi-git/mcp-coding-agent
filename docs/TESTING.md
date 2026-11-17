@@ -2,16 +2,16 @@
 
 ```bash
 pytest                          # everything
-pytest -m path_traversal        # one spec test category (markers below)
+pytest -m path_traversal        # one test category (markers below)
 pytest -m docker                # only the test that needs a real Docker daemon
 pytest --cov=app                # with line and branch coverage
 ```
 
 The suite needs no network and no API key. The workflow tests drive the real LangGraph workflow,
-real MCP servers, real git and real approvals. The model's turns are scripted
-([tests/fakes.py](../tests/fakes.py)), and pytest runs on a copy of the repository in place of
+real MCP servers, real git and real approvals. Only the model's turns are scripted
+([tests/fakes.py](../tests/fakes.py)), and pytest runs on a copy of the repository instead of in
 Docker. `tests/test_sandbox_server.py::test_real_docker_run` runs only when Docker and the
-`mcp-agent-sandbox:latest` image are available; everywhere else it is skipped.
+`mcp-agent-sandbox:latest` image are available, and is skipped everywhere else.
 
 ## Last full run
 
@@ -19,7 +19,7 @@ Docker. `tests/test_sandbox_server.py::test_real_docker_run` runs only when Dock
 macOS on Apple silicon with Docker Desktop (engine 29.9.3). Without Docker, the real-Docker test
 is skipped. A run takes about 100 seconds on a laptop, or about two minutes with coverage on.
 
-| Spec category | Marker | Tests passing |
+| Category | Marker | Tests passing |
 |---|---|---|
 | Tool discovery | `discovery` | 18 |
 | Valid tool calls | `valid_calls` | 9 |
@@ -33,10 +33,10 @@ is skipped. A run takes about 100 seconds on a laptop, or about two minutes with
 | GitHub API failures | `github_failures` | 43 |
 | Pull-request creation | `pull_requests` | 15 |
 
-Parametrized cases count separately, and a test can be in more than one category. The other
+Parametrized cases count separately, and a test can be in more than one category. The rest of the
 tests cover reliability, the documentation reader, the API, evaluation and the docs themselves.
 
-Coverage, measured with `pytest --cov=app` on the same run (line and branch combined):
+Coverage from `pytest --cov=app` (line and branch combined):
 
 | Scope | Coverage |
 |---|---|
@@ -45,81 +45,64 @@ Coverage, measured with `pytest --cov=app` on the same run (line and branch comb
 | Security-critical modules (path guard, filesystem, sandbox, patching, tool loop, MCP hub) | 92% |
 | Evaluation package | 86% |
 
-Code that the stdio tests run in subprocesses (each server's `main`) is not measured.
+Code that the stdio tests run in subprocesses (each server's `main`) isn't measured.
 
-## Spec test categories
+## Test categories
 
-[tests/spec_matrix.py](../tests/spec_matrix.py) maps each test category in the project spec to
-the tests that cover it. `conftest.py` turns the mapping into the pytest markers in the table
-above, so `pytest -m <marker>` runs one category, and every run ends with a table of results per
-category. `tests/test_spec_matrix.py` fails if a listed test is renamed or deleted, if a category
-has fewer than five tests, or if a Phase 5 test is in no category.
+The categories above are the risks I most wanted covered. Each one is tested through every way in,
+not just the module that implements the rule: a path-traversal string, for example, is tried
+against reading, searching, proposing, applying and the test command.
 
-## What each phase added
+[tests/spec_matrix.py](../tests/spec_matrix.py) lists the tests in each category, and
+`conftest.py` turns that list into the markers, so `pytest -m <marker>` runs one category and
+every run ends with a table of results per category. `tests/test_spec_matrix.py` fails if a listed
+test is renamed or deleted, if a category has fewer than five tests, or if a test in one of the
+category files isn't listed anywhere.
 
-- **Phase 1:** tool discovery; MCP connections (in-process and real stdio); valid and invalid tool
-  arguments; path traversal, symlink escapes and forbidden files; dangerous command rejection;
-  Docker isolation flags and timeouts; GitHub issue API failures; Anthropic error mapping through
-  the real SDK; and the full workflow, including failed-test recovery.
-- **Phase 2:** branch name rules; commit file filtering; pushes to a real local remote; a
-  diverged branch that is never force-pushed; token kept out of argv and `.git/config`; PR
-  request shape; PR API failures (401/403/404/422/rate limit/5xx/network); and the publication
-  checkpoint end to end (full, partial, edited, redrafted, declined, failing midway).
-- **Phase 3:** URL policy (scheme, port, credentials, IP hosts, lookalike hosts, `..` and encoded
-  escapes, query strings, login paths, secrets in URLs); private and metadata addresses; redirect
-  re-checks; no cookies or credentials ever sent; size, type, timeout and budget limits;
-  robots.txt; page conversion and section anchors; Sphinx, MkDocs and llms.txt search; index
-  caching; the docs tools over MCP (in-process and real stdio); and the workflow recording and
-  citing what the model read. The documentation sites are simulated by a mock transport
-  ([tests/docs_site.py](../tests/docs_site.py)).
-- **Phase 4:** backoff delays, jitter, `Retry-After` and retry limits; model retries through the
-  real Anthropic SDK (529 twice, then success, each attempt logged, only the success billed);
-  prices and cost; each run limit; old databases migrated; tool timeouts; which tool errors are
-  retried (read-only and idempotent tools only); cost and call limits stopping a run; a failed run
-  retried from the failed step without repeating earlier steps; retry limits; no automatic retry
-  inside `apply`; interrupted runs; test-failure analysis reaching the model; the recovery and
-  plan checkpoints; the timeline; and the retry endpoint.
-- **Phase 5:** each spec category tested through every entry point, not only the module that
-  implements the rule.
-  - **Tool contract:** the whole catalog is pinned (server, risk class, required arguments,
-    explicit annotations, valid schemas), both in-process and over the production stdio servers.
-    Every tool has a passing valid call.
-  - **Invalid arguments:** every tool rejects missing, mistyped and unknown arguments. Size and
-    range limits give clear errors.
-  - **Path traversal:** a generated set of attack paths is sent through read, search, propose,
-    apply and the test command. Symlinks pointing out of the repository and at protected files
-    are covered too.
-  - **Protected files:** letter-case variants are blocked, and protected files stay out of
-    search, the git diff, commits and the sandbox. A probe test running inside the sandbox
-    confirms it cannot see them.
-  - **Commands:** about 40 attempts to get around the allowlist are rejected, with a real check
-    that pytest applies options from `@files`.
-  - **Timeouts:** a run killed at the time limit, and a sandbox server that never answers.
-  - **Recovery:** a patch that breaks test collection and is then repaired; a rejected fix that
-    is never written.
-  - **Patches:** CRLF files, context whitespace and missing final newlines are kept. Stale
-    patches write nothing, even when only one patch in a set is stale.
-  - **GitHub:** non-JSON responses, redirects, odd payloads, 410 and secondary rate limits; an
-    outage mid-run followed by a retry.
-  - **Pull requests:** an API-mode publish end to end: a real push to a local stand-in for
-    github.com, then the exact PR request.
+## What's covered
 
-- **Phase 6:** the evaluation metrics, checked against six recorded runs with known outcomes
-  (published, recovered after a failed test run, stopped, rejected, out of budget, still
-  waiting) and against hand-computed values. Also n/a when a price is unknown, the run report,
-  the evaluation and report scripts, and checks that keep the documentation true:
-  - every setting is in `.env.example`;
-  - every route is in `docs/API.md`, and `openapi.json` is current;
-  - the README tool table and the workflow diagram match the code;
-  - links resolve, and every test cited in `docs/SECURITY.md` exists;
-  - no model name or key is in the Python code;
-  - static checks of the Docker files.
+- **Tools and MCP.** The whole tool catalog is pinned: server, risk class, required arguments,
+  annotations and schemas, both in-process and over the real stdio servers. Every tool has a
+  valid call that succeeds, and rejects missing, mistyped and unknown arguments with a clear
+  error.
+- **Files and paths.** A generated set of traversal paths, symlinks pointing out of the
+  repository or at protected files, letter-case variants of protected names, and writes outside
+  `WRITABLE_PATHS`. Protected files stay out of search, the git diff, commits and the sandbox
+  copy; a probe test running inside the sandbox confirms it can't see them.
+- **Commands and the sandbox.** About 40 attempts to get around the test command allowlist, with
+  a real check that pytest reads options from `@files`. Docker isolation flags, a run killed at
+  the time limit, and a sandbox server that never answers.
+- **Patches.** CRLF files, context whitespace and missing final newlines are kept. Stale patches
+  write nothing, even when only one patch in a set is stale. Malformed, multi-file, delete,
+  rename and binary patches are refused.
+- **GitHub.** Branch name rules, commit file filtering, pushes to a real local remote, a diverged
+  branch that is never force-pushed, and the token kept out of argv and `.git/config`. API
+  failures (401, 403, 404, 410, 422, rate limits, 5xx, network errors, non-JSON responses,
+  redirects, odd payloads), and an outage mid-run followed by a retry. An API-mode publish end to
+  end: a real push to a local stand-in for github.com, then the exact pull request request.
+- **Documentation reader.** URL policy (scheme, port, credentials, IP hosts, lookalike hosts,
+  `..` and encoded escapes, query strings, login paths, secrets in URLs), private and metadata
+  addresses, redirect re-checks, no cookies or credentials ever sent, size, type, timeout and
+  budget limits, robots.txt, page conversion, and Sphinx, MkDocs and llms.txt search. The sites
+  are simulated by a mock transport ([tests/docs_site.py](../tests/docs_site.py)).
+- **Reliability.** Backoff, jitter, `Retry-After` and retry limits; model retries through the real
+  Anthropic SDK (529 twice, then success, each attempt logged and only the success billed);
+  prices and cost; each run limit; tool timeouts; which tool errors are retried; a failed run
+  retried from the failed step without repeating earlier ones; interrupted runs; and the recovery
+  and plan checkpoints.
+- **Workflow.** The full run with approvals, rejection with feedback, failed tests followed by a
+  fix, a patch that breaks test collection and is then repaired, a rejected fix that is never
+  written, and the publication checkpoint (full, partial, edited, redrafted, declined, failing
+  midway).
+- **Evaluation.** Every metric checked against six recorded runs with known outcomes (published,
+  recovered after a failed test run, stopped, rejected, out of budget, still waiting) and
+  hand-computed values, including n/a cases.
+- **The docs.** Every setting is in `.env.example`, every route is in `docs/API.md`,
+  `openapi.json` is current, the README tool table and the workflow diagram match the code, links
+  resolve, every test cited in `docs/SECURITY.md` exists, there's no model name or key in the
+  Python code, and the Docker files pass static checks.
 
-The workflow tests use a scripted LLM and run pytest on a copy of the sample repo in place of
-Docker. `tests/test_sandbox_server.py::test_real_docker_run` runs only when Docker and the
-`mcp-agent-sandbox:latest` image are available.
-
-## Problems Phase 5 found and fixed
+## Problems the tests found
 
 - **Case variants of protected names.** On a case-insensitive file system (the macOS default),
   `.ENV` and `.GIT/config` were readable. Protected names are now compared in lower case.
@@ -134,12 +117,11 @@ Docker. `tests/test_sandbox_server.py::test_real_docker_run` runs only when Dock
   Context lines were replaced by the model's copy of them, which dropped trailing whitespace.
 - **Half-applied patch sets.** A stale second patch left the first one applied. All approved
   patches are now checked before any is written.
-- **Unknown tool arguments.** These were silently ignored, so `end_lines` was read as no
-  argument. Refused calls were also missing from the audit log.
+- **Unknown tool arguments.** These were silently ignored, so `end_lines` was treated as no
+  argument at all. Refused calls were also missing from the audit log.
 - **GitHub responses.** A non-JSON success response, a redirect from a renamed repository, or a
   payload without a number surfaced as Python exceptions.
-- **Smaller fixes:**
+- **Smaller ones:**
   - a startup error from an in-process server arrived wrapped in an `ExceptionGroup`;
   - reading past the end of a file returned an empty range instead of an error;
   - the rate-limit message said "resets at later" when GitHub gave no reset time.
-

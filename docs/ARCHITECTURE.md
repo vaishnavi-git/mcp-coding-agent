@@ -1,9 +1,10 @@
 # Architecture
 
-The agent resolves a GitHub issue in one repository. Claude does the reasoning. Every action on
-the outside world goes through one of four MCP servers. A LangGraph workflow decides the order of
-steps and where a human must approve. This page shows how the pieces fit together; the
-[security model](SECURITY.md) explains why they are split this way.
+The agent works on one GitHub issue in one repository. Claude does the reasoning, everything that
+touches the outside world goes through one of four MCP servers, and a LangGraph workflow decides
+the order of the steps and where a person has to approve. Below is how the pieces fit together;
+the [security model](SECURITY.md) explains why they're split up this way, and the
+[design notes](DESIGN.md) explain the other choices.
 
 ## Components
 

@@ -2,9 +2,9 @@
 
 The agent changes code and publishes it on GitHub, steered by a language model that reads
 untrusted text: issue bodies, repository files, documentation pages and test output. This page
-describes what it protects, how, and what it does not cover. Every security requirement from the
-project spec is mapped to the control that enforces it and to the tests that prove it. A test
-checks that each test named here exists.
+describes what it protects, how, and what it doesn't cover. Each security requirement I set for
+the project is listed with the control that enforces it and the tests that check it, and a test
+makes sure every test named here exists.
 
 ## What is protected, and from what
 
@@ -80,9 +80,9 @@ The person running the agent and approving its changes is trusted.
 11. **Prompt-injection posture.** Issue text, files, pages and test output are framed as data in
     the prompts. Even a fully persuaded model has no tool that writes, runs commands or publishes.
 
-## Spec requirements, controls and tests
+## Requirements, controls and tests
 
-### Repository workflow (Phase 1)
+### Repository workflow
 
 | Requirement | Control | Tests |
 |---|---|---|
@@ -131,7 +131,7 @@ The person running the agent and approving its changes is trusted.
 | Do not hardcode the API key or model name inside Python files | Both come only from `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL`; a run without them fails clearly | `tests/test_anthropic_provider.py::test_model_comes_from_environment`, `tests/test_anthropic_provider.py::test_missing_api_key_fails_before_any_request`, `tests/test_docs.py::test_no_model_name_or_key_in_python_code` |
 | Log request metadata without API keys or source code | Model-call log has metadata only | `tests/test_anthropic_provider.py::test_logs_contain_metadata_but_no_key_or_source` |
 
-### GitHub workflow (Phase 2)
+### GitHub workflow
 
 | Requirement | Control | Tests |
 |---|---|---|
@@ -142,7 +142,7 @@ The person running the agent and approving its changes is trusted.
 | Use least-privilege GitHub permissions | Fine-grained token for one repository (see [SETUP.md](SETUP.md#using-a-real-github-repository)); only the GitHub server gets it | `tests/test_mcp_client.py::test_stdio_configs_launch_all_servers_with_minimal_env`, `tests/test_hub_reliability.py::test_github_write_tools_are_never_retry_candidates` |
 | Handle GitHub API errors clearly | Status-specific messages, temporary errors marked, token never in messages | `tests/test_github_server.py::test_api_failures_have_clear_messages`, `tests/test_github_failures.py::test_unusual_responses_become_clear_errors`, `tests/test_github_failures.py::test_github_outage_fails_the_run_cleanly_and_a_retry_continues` |
 
-### Documentation reader (Phase 3)
+### Documentation reader
 
 | Requirement | Control | Tests |
 |---|---|---|
@@ -151,8 +151,8 @@ The person running the agent and approving its changes is trusted.
 
 ## Weaknesses found by testing
 
-Phase 5 tested each rule through every entry point and found eight holes, all fixed and covered by
-tests (details in [TESTING.md](TESTING.md#problems-phase-5-found-and-fixed)):
+Testing each rule through every way in, not just the module that implements it, found eight
+holes. All are fixed and covered by tests (details in [TESTING.md](TESTING.md#problems-the-tests-found)):
 
 - **Case variants.** Protected names in another letter case were readable on case-insensitive
   file systems.
