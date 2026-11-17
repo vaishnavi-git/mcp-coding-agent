@@ -15,7 +15,7 @@ Docker. `tests/test_sandbox_server.py::test_real_docker_run` runs only when Dock
 
 ## Last full run
 
-512 tests. With Docker running and the sandbox image built, all 512 pass; this was checked on
+514 tests. With Docker running and the sandbox image built, all 514 pass; this was checked on
 macOS on Apple silicon with Docker Desktop (engine 29.9.3). Without Docker, the real-Docker test
 is skipped. A run takes about 100 seconds on a laptop, or about two minutes with coverage on.
 
