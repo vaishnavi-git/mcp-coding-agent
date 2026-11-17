@@ -1,0 +1,41 @@
+# exit code 0; mvn -o -B test in mcp-agent-sandbox-java:latest
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------------< example:authkit >---------------------------
+[INFO] Building authkit 0.1.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ authkit ---
+[INFO] skip non existing resourceDirectory /workspace/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ authkit ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 3 source files with javac [debug release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ authkit ---
+[INFO] skip non existing resourceDirectory /workspace/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ authkit ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug release 21] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.5.2:test (default-test) @ authkit ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running authkit.SessionStoreTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.039 s -- in authkit.SessionStoreTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  2.401 s
+[INFO] Finished at: 2026-11-17T06:29:07Z
+[INFO] ------------------------------------------------------------------------

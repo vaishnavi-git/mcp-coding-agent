@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from mcp import Client
 
-from app.mcp.sandbox_server import DockerRunner, ExecResult, SandboxSettings, build_server, summarize_pytest
+from app.mcp.sandbox_server import DockerRunner, ExecResult, SandboxSettings, build_server, summarize
 from tests.fakes import FakeRunner
 
 pytestmark = pytest.mark.anyio
@@ -97,7 +97,7 @@ def test_docker_runner_uses_a_copy_and_reports_output(sample_repo: Path, tmp_pat
     assert runner.check_available() is None
     result = runner.run(sample_repo, ["pytest", "-q"])
     assert result.exit_code == 0 and not result.timed_out
-    assert summarize_pytest(result.stdout) == "3 passed in 0.05s"
+    assert summarize(result.stdout, result.argv) == "3 passed in 0.05s"
     args = (tmp_path / "docker.args").read_text().splitlines()
     mount = next(a for a in args if a.endswith(":/workspace:rw"))
     assert str(sample_repo) not in mount  # the container never sees the real workspace

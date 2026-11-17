@@ -44,6 +44,26 @@
       "index": {"type": "llms_txt", "url": "https://docs.github.com/llms.txt"}
     },
     {
+      "name": "nodejs",
+      "description": "Node.js API reference, including node:test and node:assert, e.g. https://nodejs.org/api/test.html (read only; no search index)",
+      "base_url": "https://nodejs.org/api/"
+    },
+    {
+      "name": "mdn-javascript",
+      "description": "MDN JavaScript reference and guides, e.g. https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map (read only; no search index)",
+      "base_url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/"
+    },
+    {
+      "name": "java-se",
+      "description": "Java SE 21 API, e.g. https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/HashMap.html (read only; no search index)",
+      "base_url": "https://docs.oracle.com/en/java/javase/21/docs/api/"
+    },
+    {
+      "name": "junit5",
+      "description": "JUnit 5.11 user guide and API, the version in the Java sandbox image, e.g. https://docs.junit.org/5.11.3/user-guide/ (read only; no search index)",
+      "base_url": "https://docs.junit.org/5.11.3/"
+    },
+    {
       "name": "peps",
       "description": "Python Enhancement Proposals (read only; no search index)",
       "base_url": "https://peps.python.org/"

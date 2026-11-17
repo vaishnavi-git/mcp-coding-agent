@@ -45,6 +45,30 @@ expose them on a network.
 To start over, recreate the sample repository (`python scripts/setup_sample_repo.py --force`).
 Runs change its working tree, and a new run expects a clean one.
 
+### JavaScript and Java
+
+The same sample exists in JavaScript (Node's built-in test runner) and Java (Maven and JUnit 5).
+Each language has its own test image:
+
+```bash
+python scripts/setup_sample_repo.py --language javascript --force   # workspaces/sample-repo-js
+docker build -t mcp-agent-sandbox-js:latest sandbox/javascript/
+
+python scripts/setup_sample_repo.py --language java --force         # workspaces/sample-repo-java
+docker build -t mcp-agent-sandbox-java:latest sandbox/java/
+```
+
+Then point `REPO_PATH` at the new directory and set `WRITABLE_PATHS` to `src,test` (JavaScript) or
+`src` (Java). `PROJECT_LANGUAGE` is detected from the repository (`package.json`, `pom.xml`), and it
+picks the test command, the allowlist, the sandbox image and the fixture issues. If your `.env` was
+copied from an older `.env.example`, remove the `TEST_COMMAND`, `TEST_COMMAND_ALLOWLIST`,
+`SANDBOX_IMAGE` and `GITHUB_ISSUES_FILE` lines, which would otherwise keep the Python values.
+
+The test sandbox has no network, so dependencies have to be in the image. The Java image downloads
+JUnit and the Maven plugins the sample uses while it's built, and Maven runs offline (`-o`). For
+your own Java project, add what it needs to `sandbox/java/prefetch/pom.xml`; for a JavaScript
+project with dependencies, see the comment in `sandbox/javascript/Dockerfile`.
+
 ## Docker Compose
 
 ```bash
@@ -129,12 +153,13 @@ All settings are environment variables, read from `.env` if present (see
 | Variable | Default | Meaning |
 |---|---|---|
 | `REPO_PATH` | `workspaces/sample-repo` | The only repository the agent can read or change. |
+| `PROJECT_LANGUAGE` | `auto` | `python`, `javascript` or `java`; `auto` looks for `pyproject.toml`, `setup.py`, `setup.cfg` or `requirements.txt`, then `package.json`, then `pom.xml` when the agent starts. Picks the defaults marked "by language". |
 | `WRITABLE_PATHS` | (whole repository) | Comma-separated directories the agent may change. |
 | `ALLOW_NEW_FILES` | `true` | Whether patches may create files (inside writable paths). |
 | `GITHUB_MODE` | `fixture` | `fixture` (issues from a JSON file, local remote) or `api` (GitHub). |
 | `GITHUB_REPOSITORY` | `demo/sample-repo` | `owner/name`. |
 | `GITHUB_TOKEN` | (unset) | Fine-grained token; only the GitHub MCP server receives it. |
-| `GITHUB_ISSUES_FILE` | `examples/issues/sample-repo.json` | Issues for fixture mode. |
+| `GITHUB_ISSUES_FILE` | by language: `examples/issues/sample-repo.json`, `sample-repo-js.json`, `sample-repo-java.json` | Issues for fixture mode. |
 | `GITHUB_API_URL` | `https://api.github.com` | For GitHub Enterprise Server. |
 | `GITHUB_WEB_URL` | `https://github.com` | Push URL base for api mode. |
 | `GITHUB_DEFAULT_BRANCH` | `main` | Never committed to or pushed directly; pull requests target it. |
@@ -146,12 +171,12 @@ All settings are environment variables, read from `.env` if present (see
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `SANDBOX_IMAGE` | `mcp-agent-sandbox:latest` | Test image (`sandbox/Dockerfile`). |
+| `SANDBOX_IMAGE` | by language: `mcp-agent-sandbox:latest`, `mcp-agent-sandbox-js:latest`, `mcp-agent-sandbox-java:latest` | Test image, built from `sandbox/`, `sandbox/javascript/` or `sandbox/java/`. |
 | `SANDBOX_TIMEOUT_SECONDS` | `120` | A test run is killed after this. |
 | `SANDBOX_MEMORY_MB`, `SANDBOX_CPUS`, `SANDBOX_PIDS` | `1024`, `1.0`, `256` | Container limits. |
 | `SANDBOX_WORK_DIR` | system temp directory | Where repository copies for test runs go (see Docker Compose). |
-| `TEST_COMMAND` | `pytest -q -p no:cacheprovider` | The command the workflow runs. Checked against the allowlist like any other. |
-| `TEST_COMMAND_ALLOWLIST` | `pytest,python -m pytest` | Allowed command prefixes. |
+| `TEST_COMMAND` | by language: `pytest -q -p no:cacheprovider`, `node --test --test-reporter=tap`, `mvn -o -B test` | The command the workflow runs. Checked against the allowlist like any other. |
+| `TEST_COMMAND_ALLOWLIST` | by language: `pytest,python -m pytest`, `node --test`, `mvn` | Allowed command prefixes. Each runner also has its own rules for arguments: see [SECURITY.md](SECURITY.md#controls). |
 
 ### Documentation reader
 

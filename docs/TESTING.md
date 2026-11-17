@@ -3,21 +3,22 @@
 ```bash
 pytest                          # everything
 pytest -m path_traversal        # one test category (markers below)
-pytest -m docker                # only the test that needs a real Docker daemon
+pytest -m docker                # only the tests that need a real Docker daemon
 pytest --cov=app                # with line and branch coverage
 ```
 
 The suite needs no network and no API key. The workflow tests drive the real LangGraph workflow,
 real MCP servers, real git and real approvals. Only the model's turns are scripted
 ([tests/fakes.py](../tests/fakes.py)), and pytest runs on a copy of the repository instead of in
-Docker. `tests/test_sandbox_server.py::test_real_docker_run` runs only when Docker and the
-`mcp-agent-sandbox:latest` image are available, and is skipped everywhere else.
+Docker. The three real-Docker tests (`pytest -m docker`), one per sandbox image, run only when
+Docker and that image are available, and are skipped everywhere else. The JavaScript workflow test
+uses the local `node` in place of Docker and is skipped if there isn't one.
 
 ## Last full run
 
-514 tests. With Docker running and the sandbox image built, all 514 pass; this was checked on
-macOS on Apple silicon with Docker Desktop (engine 29.9.3). Without Docker, the real-Docker test
-is skipped. A run takes about 100 seconds on a laptop, or about two minutes with coverage on.
+595 tests. With Docker running and the three sandbox images built, all 595 pass; this was checked
+on macOS on Apple silicon with Docker Desktop (engine 29.9.3). Without Docker, the three
+real-Docker tests are skipped. A run takes about two minutes on a laptop.
 
 | Category | Marker | Tests passing |
 |---|---|---|
@@ -26,7 +27,7 @@ is skipped. A run takes about 100 seconds on a laptop, or about two minutes with
 | Invalid arguments | `invalid_args` | 36 |
 | Path traversal attempts | `path_traversal` | 45 |
 | Unauthorized file access | `unauthorized_access` | 55 |
-| Dangerous command rejection | `dangerous_commands` | 77 |
+| Dangerous command rejection | `dangerous_commands` | 124 |
 | Test timeout handling | `timeouts` | 7 |
 | Failed test recovery | `recovery` | 10 |
 | Patch application | `patching` | 36 |
@@ -40,9 +41,9 @@ Coverage from `pytest --cov=app` (line and branch combined):
 
 | Scope | Coverage |
 |---|---|
-| The whole `app` package | 86% |
+| The whole `app` package | 87% |
 | Without the Streamlit UI (no automated tests; checked by hand) | 92% |
-| Security-critical modules (path guard, filesystem, sandbox, patching, tool loop, MCP hub) | 92% |
+| Security-critical modules (path guard, filesystem, sandbox, patching, tool loop, MCP hub) | 93% |
 | Evaluation package | 86% |
 
 Code that the stdio tests run in subprocesses (each server's `main`) isn't measured.
@@ -69,9 +70,16 @@ category files isn't listed anywhere.
   repository or at protected files, letter-case variants of protected names, and writes outside
   `WRITABLE_PATHS`. Protected files stay out of search, the git diff, commits and the sandbox
   copy; a probe test running inside the sandbox confirms it can't see them.
-- **Commands and the sandbox.** About 40 attempts to get around the test command allowlist, with
-  a real check that pytest reads options from `@files`. Docker isolation flags, a run killed at
-  the time limit, and a sandbox server that never answers.
+- **Commands and the sandbox.** About 40 attempts to get around the pytest allowlist, with a real
+  check that pytest reads options from `@files`, and about 35 more for `node --test` (code-loading
+  options, options after file names) and Maven (other goals, other POM or settings files, other
+  properties, running online). Docker isolation flags, a run killed at the time limit, and a
+  sandbox server that never answers.
+- **Languages.** Detection from marker files, the defaults each language picks, and reading test
+  output, checked against real `node --test` and Maven output recorded from the sandbox images
+  ([tests/data/runner_output](../tests/data/runner_output)). A JavaScript issue run through the
+  whole workflow, from failing tests to the publication checkpoint, and both new images run for
+  real in Docker.
 - **Patches.** CRLF files, context whitespace and missing final newlines are kept. Stale patches
   write nothing, even when only one patch in a set is stale. Malformed, multi-file, delete,
   rename and binary patches are refused.

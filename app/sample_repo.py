@@ -1,4 +1,4 @@
-"""Create a fresh git checkout of the bundled sample repository.
+"""Create a fresh git checkout of one of the bundled sample repositories.
 
 A local bare repository next to it acts as ``origin``, so the
 publishing flow (push + pull request in fixture mode) works without GitHub.
@@ -10,16 +10,25 @@ import shutil
 from pathlib import Path
 
 from app.config import PROJECT_ROOT
+from app.languages import ALIASES, PROFILES
 from app.mcp.git_utils import run_git
 
 SAMPLE_SOURCE = PROJECT_ROOT / "examples" / "sample-repo"
+
+
+def sample_source(language: str = "python") -> Path:
+    """examples/sample-repo, sample-repo-js or sample-repo-java."""
+    name = ALIASES.get(language, language)
+    if name not in PROFILES:
+        raise ValueError(f"no sample repository for {language!r} (choose from {', '.join(PROFILES)})")
+    return PROJECT_ROOT / "examples" / PROFILES[name].sample
 
 
 def origin_path(dest: Path) -> Path:
     return Path(dest).parent / f"{Path(dest).name}-origin.git"
 
 
-def setup_sample_repo(dest: Path, *, force: bool = False, with_origin: bool = True) -> Path:
+def setup_sample_repo(dest: Path, *, force: bool = False, with_origin: bool = True, language: str = "python") -> Path:
     dest = Path(dest)
     origin = origin_path(dest)
     if dest.exists():
@@ -28,7 +37,7 @@ def setup_sample_repo(dest: Path, *, force: bool = False, with_origin: bool = Tr
         shutil.rmtree(dest)
     if force and origin.exists():
         shutil.rmtree(origin)
-    shutil.copytree(SAMPLE_SOURCE, dest, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache"))
+    shutil.copytree(sample_source(language), dest, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache", "node_modules", "target"))
     run_git(dest, "init", "-q", "-b", "main")
     run_git(dest, "add", "-A")
     run_git(dest, "-c", "user.name=Sample Setup", "-c", "user.email=setup@example.invalid", "commit", "-q", "-m", "Initial commit")

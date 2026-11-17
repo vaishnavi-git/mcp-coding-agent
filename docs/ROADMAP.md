@@ -1,6 +1,6 @@
 # Roadmap
 
-This is what I'm working on next. It came out of the first experiment
+This is what I'm working on next. Most of it came out of the first experiment
 ([EVALUATION.md](EVALUATION.md#results)): the agent solved every task, but the runs showed where it
 wastes money and where it gets things wrong.
 
@@ -17,27 +17,32 @@ Where the money went in the 10 counted runs:
 Most of it is output tokens, mostly thinking. 68% of input tokens were already served from the
 prompt cache, so caching alone won't change much.
 
-## JavaScript and Java
+## JavaScript and Java (done)
 
-Everything pytest-specific moves into a language profile (`app/languages.py`):
+Everything that was pytest-specific now comes from a language profile (`app/languages.py`), and
+the sandbox, the command rules and the test-output reading know three runners:
 
 | | Python | JavaScript | Java |
 |---|---|---|---|
-| Detected by | `pyproject.toml`, `setup.py`, `requirements.txt` | `package.json` | `pom.xml` |
-| Sandbox image | `mcp-agent-sandbox` (`sandbox/Dockerfile`) | `mcp-agent-sandbox-js` (`sandbox/javascript/`) | `mcp-agent-sandbox-java` (`sandbox/java/`) |
-| Test command | `pytest -q -p no:cacheprovider` | `node --test` | `mvn -o -q -B test` |
-| Allowed options | the existing pytest flags | `--test`, `--test-reporter=tap/spec`, a simple `--test-name-pattern`; never `--require`, `--import`, `--eval`, loaders or inspectors | offline (`-o`) always; `-q`, `-B`, a simple `-Dtest=Class[#method]`; the only goal is `test` |
-| Output parsed from | `FAILED`/`ERROR` lines | TAP `not ok` lines and `# pass`/`# fail` | surefire `Tests run:` totals, `[ERROR]` lines, `COMPILATION ERROR` |
+| Detected by | `pyproject.toml`, `setup.py`, `setup.cfg`, `requirements.txt` | `package.json` | `pom.xml` |
+| Sandbox image | `mcp-agent-sandbox` (`sandbox/`) | `mcp-agent-sandbox-js` (`sandbox/javascript/`) | `mcp-agent-sandbox-java` (`sandbox/java/`) |
+| Test command | `pytest -q -p no:cacheprovider` | `node --test --test-reporter=tap` | `mvn -o -B test` |
+| Allowed options | the existing pytest flags | `--test` first, a reporter, a simple `--test-name-pattern` | offline (`-o`) always, `-q`, `-B`, `-Dtest=Class#method`; the only goal is `test` |
+| Failures read from | `FAILED`/`ERROR` lines | TAP `not ok` lines | surefire `<<< FAILURE!` lines, `COMPILATION ERROR` |
 
-- `PROJECT_LANGUAGE` (`auto` by default) picks the profile. `TEST_COMMAND`,
-  `TEST_COMMAND_ALLOWLIST` and `SANDBOX_IMAGE` still win when they're set.
-- The sandbox keeps `--network none`, so dependencies have to be in the image. The Java image
-  downloads JUnit 5 and the Maven plugins when it's built. The JavaScript sample only uses Node's
-  built-in test runner.
-- `examples/sample-repo-js` and `examples/sample-repo-java` are ports of the same session library
-  with the same bug, each with its own issues file. `setup_sample_repo.py --language` sets them up.
-- The documentation reader gets read-only sources for Node.js, MDN JavaScript, the Java SE API
-  and JUnit 5.
+There are JavaScript and Java ports of the sample, with the same bug and their own issues file, and
+read-only documentation sources for Node.js, MDN JavaScript, the Java SE API and JUnit 5.
+
+A few things turned out differently from the plan:
+
+- The JavaScript test command asks for the TAP reporter explicitly. Which reporter Node uses by
+  default depends on its version and on whether output goes to a terminal.
+- Maven runs without `-q`, because in quiet mode a passing run prints nothing, not even the test
+  totals.
+- `node --test` and Maven both exit with 0 when they find no tests. A run where nothing was tested
+  now counts as failed for every runner, the way pytest already treated it.
+- Maven's console library tried to unpack a native helper into `/tmp`, which the sandbox mounts
+  `noexec`, and printed an error on every run. The Java image now unpacks it at build time.
 
 ## Look at the code before planning
 
@@ -86,12 +91,8 @@ The first comparison will be `claude-sonnet-5` against `claude-sonnet-5-5`, 10 r
 the same harness. The hand-reviewed results from the first experiment stay as they are and won't
 be mixed in.
 
-## Tests for all of this
+## Tests for the rest
 
-- Language detection, and the same kinds of bypass attempts against the new command validators
-  as against the pytest one.
-- The output parsers, checked against real `node --test` and Maven output.
-- Real Docker runs for the JavaScript and Java images, with CI building all three.
 - The three-part plan step, the summary check, per-step models and pricing.
 - The benchmark harness: it refuses outside the samples, records evaluator decisions, and its
   acceptance tests pass on a right fix and fail on a wrong one.

@@ -51,6 +51,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
 from app.config import Settings
+from app.languages import runner_for
 from app.llm.base import LLMError, LLMProvider
 from app.mcp.client import MCPHub, Risk, ToolNotFound, ToolOutcome, ToolSpec
 from app.reliability import test_results
@@ -523,7 +524,7 @@ def build_graph(deps: AgentDeps | None) -> StateGraph:
             exit_code=exit_code,
             summary=fields.get("summary", "-"),
             output=_clip(outcome.text, 20000),
-            **test_results.analyze(status, outcome.text, exit_code),  # type: ignore[typeddict-item]
+            **test_results.analyze(status, outcome.text, exit_code, runner_for(fields.get("command", deps_.settings.test_command).split())),  # type: ignore[typeddict-item]
         )
         if record["status"] == "PASSED":
             return {"test_runs": [record], "tests_passed": True, "recovery": {}}

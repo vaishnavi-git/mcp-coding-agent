@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- JavaScript and Java repositories. The language is detected from `package.json` or `pom.xml`
+  (or set with `PROJECT_LANGUAGE`) and picks the test command, its allowlist and the sandbox
+  image. `node --test` and Maven each get their own option rules and output parsing, and there
+  are JavaScript and Java versions of the sample repository, sandbox images for both, and
+  read-only docs for Node.js, MDN, the Java SE API and JUnit 5.
+- A test run in which no tests ran now counts as failed for every runner.
 - The long implementation plan is now split into [design notes](docs/DESIGN.md), this changelog
   and a [roadmap](docs/ROADMAP.md). The README has been rewritten.
 - Comments and docstrings no longer refer to the stages the project was built in.

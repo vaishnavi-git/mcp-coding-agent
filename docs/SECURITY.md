@@ -42,10 +42,16 @@ The person running the agent and approving its changes is trusted.
    - writes are limited to `WRITABLE_PATHS`;
    - search and the diff never follow links to protected files or out of the repository;
    - no tool deletes files.
-4. **Command policy.** The sandbox accepts only allowlisted test commands with safe pytest options
-   and in-repository paths. It refuses shell syntax, `rm`, `sudo`, `git push`, force flags,
-   network tools, package installs, `@argument-files` and anything else with a reason. The model
-   never chooses the command.
+4. **Command policy.** The sandbox accepts only allowlisted test commands with in-repository paths.
+   It refuses shell syntax, `rm`, `sudo`, `git push`, force flags, network tools, package installs
+   and anything else with a reason. Each test runner has its own short list of allowed options:
+   - pytest: output and selection flags, `-k` with a simple expression; no `@argument-files`;
+   - `node --test`: `--test` first, a reporter, a simple `--test-name-pattern`; nothing that loads
+     or evaluates other code (`--require`, `--import`, `--eval`, loaders, inspectors, `--env-file`);
+   - Maven: offline (`-o`) is required, `test` is the only goal, and `-Dtest=Class#method` is the
+     only property besides two fixed surefire switches.
+
+   The model never chooses the command.
 5. **Docker sandbox.** Every test run gets a disposable copy of the repository without protected
    files. The container has `--network none`, a read-only root filesystem, `--cap-drop ALL` and
    `no-new-privileges`, runs as a non-root user, has memory/CPU/PID limits, and is killed at the

@@ -1,0 +1,41 @@
+# exit code 0; node --test --test-reporter=tap in mcp-agent-sandbox-js:latest
+TAP version 13
+# Subtest: login returns a working access token
+ok 1 - login returns a working access token
+  ---
+  duration_ms: 0.582708
+  type: 'test'
+  ...
+# Subtest: an expired access token is rejected
+ok 2 - an expired access token is rejected
+  ---
+  duration_ms: 0.321708
+  type: 'test'
+  ...
+# Subtest: refresh issues a new access token
+ok 3 - refresh issues a new access token
+  ---
+  duration_ms: 0.18425
+  type: 'test'
+  ...
+# Subtest: refresh rotates the refresh token
+ok 4 - refresh rotates the refresh token
+  ---
+  duration_ms: 0.265208
+  type: 'test'
+  ...
+# Subtest: logout revokes tokens
+ok 5 - logout revokes tokens
+  ---
+  duration_ms: 0.110333
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 50.760042

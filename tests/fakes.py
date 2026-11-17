@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -120,7 +121,11 @@ class ScriptedProvider(LLMProvider):
 
 
 class LocalPytestRunner:
-    """Test-only stand-in for DockerRunner: runs pytest on a copy of the repo with this interpreter."""
+    """Test-only stand-in for DockerRunner: runs the tests on a copy of the repo on this machine.
+
+    pytest runs with this interpreter; ``node --test`` runs with the local node (the JavaScript
+    tests skip themselves when there is none).
+    """
 
     name = "local-test-double"
 
@@ -132,12 +137,21 @@ class LocalPytestRunner:
 
     def run(self, repo_root: Path, argv: list[str]) -> ExecResult:
         self.commands.append(list(argv))
-        cmd = [sys.executable, "-m", "pytest", *argv[1:]] if argv[0] == "pytest" else [sys.executable, *argv[1:]]
+        path = "/usr/bin:/bin"
+        if argv[0] == "node":
+            node = shutil.which("node")
+            assert node, "node is not installed"
+            cmd = [node, *argv[1:]]
+            path = f"{Path(node).parent}:{path}"
+        elif argv[0] == "pytest":
+            cmd = [sys.executable, "-m", "pytest", *argv[1:]]
+        else:
+            cmd = [sys.executable, *argv[1:]]
         start = time.monotonic()
         with tempfile.TemporaryDirectory() as tmp:
             copy = Path(tmp) / "repo"
             copy_repository(repo_root, copy)
-            proc = subprocess.run(cmd, cwd=copy, capture_output=True, text=True, timeout=120, env={"PATH": "/usr/bin:/bin", "PYTHONDONTWRITEBYTECODE": "1"})
+            proc = subprocess.run(cmd, cwd=copy, capture_output=True, text=True, timeout=120, env={"PATH": path, "PYTHONDONTWRITEBYTECODE": "1"})
         return ExecResult(argv, proc.returncode, proc.stdout, proc.stderr, time.monotonic() - start, False)
 
 

@@ -55,6 +55,28 @@ Some rules are enforced in the workflow code rather than left to the prompt:
   `.netrc`, `.npmrc`, `.pypirc` and `credentials.json`, in any letter case, and symlinks that
   point at any of these or outside the repository.
 
+## Languages
+
+Python, JavaScript and Java differ in only a few places, and those live in one profile per
+language (`app/languages.py`): the files that identify a project, the sandbox image, the default
+test command and its allowlist, and the sample repository. The language is detected from the
+repository when the agent starts, or set with `PROJECT_LANGUAGE`.
+
+Two things depend on the test runner rather than on the language, so they're keyed by the command
+that actually runs:
+
+- **Which options are allowed.** pytest, `node --test` and Maven each get a short list. For Node
+  that means nothing that loads or evaluates other code (`--require`, `--import`, `--eval`,
+  loaders), and `--test` has to come first, because anything before it makes node run a script.
+  For Maven, `test` is the only goal and `-o` is required.
+- **How the output is read.** pytest's short summary, TAP `not ok` lines from Node, and surefire's
+  `<<< FAILURE!` lines from Maven all end up as the same failure kind and list of failing tests, so
+  the retry logic doesn't care which language it's working on.
+
+Tests never have network access, so a language's dependencies have to be in its image. The Java
+image runs `mvn test` once at build time on a small project with the sample's plugin and JUnit
+versions, and Maven then runs offline against that cache.
+
 ## Approvals
 
 | Action | Needs approval? |

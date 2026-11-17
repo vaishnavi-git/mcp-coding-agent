@@ -1,4 +1,4 @@
-"""Which tests cover each test category in the project spec.
+"""Which tests cover each test category.
 
 ``conftest.py`` turns this mapping into pytest markers, so one category can be
 run on its own (``pytest -m path_traversal``), and every run ends with a table
@@ -116,6 +116,12 @@ SPEC_MATRIX: dict[str, list[str]] = {
         "test_command_policy.py::test_pytest_really_expands_argument_files",
         "test_command_policy.py::test_the_model_cannot_choose_the_test_command",
         "test_command_policy.py::test_a_dangerous_configured_test_command_is_rejected_too",
+        "test_command_policy.py::test_node_bypass_attempts_are_rejected",
+        "test_command_policy.py::test_node_must_run_its_test_runner_even_with_a_wider_allowlist",
+        "test_command_policy.py::test_maven_bypass_attempts_are_rejected",
+        "test_command_policy.py::test_ordinary_node_test_commands_still_work",
+        "test_command_policy.py::test_ordinary_maven_test_commands_still_work",
+        "test_command_policy.py::test_no_rejected_node_or_maven_command_reaches_the_sandbox_runner",
         "test_security.py::test_dangerous_commands_are_rejected",
         "test_security.py::test_allowlisted_commands_are_accepted",
         "test_sandbox_server.py::test_dangerous_commands_never_reach_the_runner",

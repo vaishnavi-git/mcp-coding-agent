@@ -12,6 +12,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from app.languages import PROFILES, resolve_language
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -99,6 +101,9 @@ class Settings:
     require_plan_approval: bool
     # Storage
     data_dir: Path
+    # Project language: python, javascript or java (PROJECT_LANGUAGE, detected from REPO_PATH by default).
+    # It picks the defaults for TEST_COMMAND, TEST_COMMAND_ALLOWLIST, SANDBOX_IMAGE and the fixture issues.
+    project_language: str = "python"
 
     @property
     def database_path(self) -> Path:
@@ -126,6 +131,9 @@ class Settings:
         load_dotenv(env_file or PROJECT_ROOT / ".env", override=False)
         e = os.environ.get
         issues_file = e("GITHUB_ISSUES_FILE")
+        repo_path = _path(e("REPO_PATH"), PROJECT_ROOT / "workspaces" / "sample-repo")
+        language = resolve_language(e("PROJECT_LANGUAGE"), repo_path)
+        profile = PROFILES[language]
         return cls(
             anthropic_api_key=e("ANTHROPIC_API_KEY") or None,
             anthropic_model=(e("ANTHROPIC_MODEL") or "").strip(),  # no default in code: set it in .env (see .env.example)
@@ -134,13 +142,13 @@ class Settings:
             anthropic_thinking=(e("ANTHROPIC_THINKING") or "adaptive").lower(),
             anthropic_timeout_seconds=float(e("ANTHROPIC_TIMEOUT_SECONDS", "120")),
             anthropic_max_retries=int(e("ANTHROPIC_MAX_RETRIES", "3")),
-            repo_path=_path(e("REPO_PATH"), PROJECT_ROOT / "workspaces" / "sample-repo"),
+            repo_path=repo_path,
             writable_paths=_list(e("WRITABLE_PATHS")),
             allow_new_files=_bool(e("ALLOW_NEW_FILES"), True),
             github_mode=(e("GITHUB_MODE") or "fixture").lower(),
             github_repository=e("GITHUB_REPOSITORY") or "demo/sample-repo",
             github_token=e("GITHUB_TOKEN") or None,
-            github_issues_file=_path(issues_file, PROJECT_ROOT) if issues_file else PROJECT_ROOT / "examples" / "issues" / "sample-repo.json",
+            github_issues_file=_path(issues_file, PROJECT_ROOT) if issues_file else PROJECT_ROOT / "examples" / "issues" / profile.issues_file,
             github_api_url=e("GITHUB_API_URL") or "https://api.github.com",
             github_default_branch=e("GITHUB_DEFAULT_BRANCH") or "main",
             github_branch_prefix=e("GITHUB_BRANCH_PREFIX", "agent/"),
@@ -148,14 +156,14 @@ class Settings:
             github_web_url=e("GITHUB_WEB_URL") or "https://github.com",
             git_author_name=e("GIT_AUTHOR_NAME") or "MCP Coding Agent",
             git_author_email=e("GIT_AUTHOR_EMAIL") or "mcp-coding-agent@users.noreply.github.com",
-            sandbox_image=e("SANDBOX_IMAGE") or "mcp-agent-sandbox:latest",
+            sandbox_image=e("SANDBOX_IMAGE") or profile.sandbox_image,
             sandbox_timeout_seconds=int(e("SANDBOX_TIMEOUT_SECONDS", "120")),
             sandbox_memory_mb=int(e("SANDBOX_MEMORY_MB", "1024")),
             sandbox_cpus=float(e("SANDBOX_CPUS", "1.0")),
             sandbox_pids=int(e("SANDBOX_PIDS", "256")),
             sandbox_work_dir=_path(e("SANDBOX_WORK_DIR"), PROJECT_ROOT) if e("SANDBOX_WORK_DIR") else None,
-            test_command=e("TEST_COMMAND") or "pytest -q -p no:cacheprovider",
-            test_command_allowlist=_list(e("TEST_COMMAND_ALLOWLIST")) or ("pytest", "python -m pytest"),
+            test_command=e("TEST_COMMAND") or profile.test_command,
+            test_command_allowlist=_list(e("TEST_COMMAND_ALLOWLIST")) or profile.test_command_allowlist,
             docs_enabled=_bool(e("DOCS_ENABLED"), True),
             docs_sources_file=_path(e("DOCS_SOURCES_FILE"), PROJECT_ROOT / "config" / "docs_sources.json"),
             docs_timeout_seconds=float(e("DOCS_TIMEOUT_SECONDS", "15")),
@@ -181,4 +189,5 @@ class Settings:
             max_run_retries=int(e("MAX_RUN_RETRIES", "3")),
             require_plan_approval=_bool(e("REQUIRE_PLAN_APPROVAL"), False),
             data_dir=_path(e("DATA_DIR"), PROJECT_ROOT / "data"),
+            project_language=language,
         )

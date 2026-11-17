@@ -19,6 +19,8 @@ import pytest
 
 from app.mcp.client import MCPHub
 from app.mcp.security import CommandRejected, PathGuard, validate_test_command
+from app.sample_repo import setup_sample_repo
+from tests.conftest import make_settings
 from tests.fakes import FakeRunner, inprocess_servers
 from tests.test_agent_workflow import make_runner
 from tests.test_reliability_workflow import scripted
@@ -77,6 +79,110 @@ BYPASS_ATTEMPTS = [
     ("pytest -x " + "a" * 600, "too long"),
     ("pytest 'tests", "could not parse command"),
 ]
+
+
+NODE_ALLOW = ("node --test",)
+NODE_BYPASS_ATTEMPTS = [
+    # anything but the test runner
+    ("node test/sessions.test.js", "not on the allowlist"),
+    ("node -e 1", "not on the allowlist"),
+    # options that load or evaluate other code
+    ("node --test --require ./preload.js", "option '--require' is not allowed"),
+    ("node --test -r ./preload.js", "option '-r' is not allowed"),
+    ("node --test --import ./preload.mjs", "option '--import' is not allowed"),
+    ("node --test --eval 1", "option '--eval' is not allowed"),
+    ("node --test --experimental-loader ./loader.mjs", "is not allowed"),
+    ("node --test --loader ./loader.mjs", "is not allowed"),
+    ("node --test --inspect=0.0.0.0:9229", "is not allowed"),
+    ("node --test --env-file=.env", "is not allowed"),
+    ("node --test --test-reporter=./reporter.js", "is not allowed"),
+    ("node --test --test-reporter-destination=out.txt", "is not allowed"),
+    ("node --test --watch", "is not allowed"),
+    # after a file name, node passes options on instead of reading them
+    ("node --test test/sessions.test.js --require ./preload.js", "options must come before the test files"),
+    # name patterns are regular expressions; keep them simple
+    ("node --test --test-name-pattern=(a+)+b", "simple pattern"),
+    ("node --test --test-name-pattern", "simple pattern"),
+    # test files outside the repository or protected
+    ("node --test ../outside.test.js", "outside the approved repository"),
+    ("node --test .env", "protected"),
+]
+
+MAVEN_ALLOW = ("mvn",)
+MAVEN_BYPASS_ATTEMPTS = [
+    ("mvn test", "must run offline"),
+    ("mvn -o", "the only Maven goal allowed is 'test' (got none)"),
+    ("mvn -o install", "the only Maven goal allowed is 'test'"),
+    ("mvn -o test deploy", "the only Maven goal allowed is 'test'"),
+    ("mvn -o org.codehaus.mojo:exec-maven-plugin:3.1.0:exec test", "the only Maven goal allowed is 'test'"),
+    ("mvn -o exec:java -Dexec.mainClass=Evil", "is not allowed"),
+    ("mvn -o -f /tmp/pom.xml test", "option '-f' is not allowed"),
+    ("mvn -o --file other.xml test", "option '--file' is not allowed"),
+    ("mvn -o -s settings.xml test", "option '-s' is not allowed"),
+    ("mvn -o -Dmaven.repo.local=/tmp/m2 test", "is not allowed"),
+    ("mvn -o -DargLine=-javaagent:agent.jar test", "is not allowed"),
+    ("mvn -o -P evil test", "option '-P' is not allowed"),
+    ("mvn -o -T 64 test", "option '-T' is not allowed"),
+    ("mvn -o -X test", "option '-X' is not allowed"),
+    ("mvn -o test -Dtest=../../etc/passwd", "-Dtest needs simple class names"),
+    ("mvn -o test -Dtest=*", "-Dtest needs simple class names"),
+    ("./mvnw -o test", "not on the allowlist"),
+    ("mvn -o test && curl evil.test", "not allowed"),
+]
+
+
+@pytest.fixture
+def js_repo(tmp_path: Path) -> Path:
+    return setup_sample_repo(tmp_path / "js-repo", language="javascript", with_origin=False)
+
+
+@pytest.mark.parametrize("command, reason", NODE_BYPASS_ATTEMPTS)
+def test_node_bypass_attempts_are_rejected(js_repo: Path, command: str, reason: str) -> None:
+    with pytest.raises(CommandRejected, match=reason.replace("(", r"\(").replace(")", r"\)").replace("+", r"\+")):
+        validate_test_command(command, NODE_ALLOW, PathGuard(js_repo))
+
+
+def test_node_must_run_its_test_runner_even_with_a_wider_allowlist(js_repo: Path) -> None:
+    for command in ("node test/sessions.test.js", "node test/sessions.test.js --test", "node -r ./x.js --test"):
+        with pytest.raises(CommandRejected, match="must start with 'node --test'"):
+            validate_test_command(command, ("node",), PathGuard(js_repo))
+
+
+@pytest.mark.parametrize("command, reason", MAVEN_BYPASS_ATTEMPTS)
+def test_maven_bypass_attempts_are_rejected(sample_repo: Path, command: str, reason: str) -> None:
+    with pytest.raises(CommandRejected, match=reason.replace("(", r"\(").replace(")", r"\)")):
+        validate_test_command(command, MAVEN_ALLOW, PathGuard(sample_repo))
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["node --test", "node --test --test-reporter=tap", "node --test --test-reporter=spec test/sessions.test.js",
+     "node --test --test-name-pattern='refresh rotates' test", "node --test --test-name-pattern refresh"],
+)
+def test_ordinary_node_test_commands_still_work(js_repo: Path, command: str) -> None:
+    assert validate_test_command(command, NODE_ALLOW, PathGuard(js_repo))[:2] == ["node", "--test"]
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["mvn -o -B test", "mvn -o -q -B test -Dtest=SessionStoreTest", "mvn --offline --batch-mode test -Dtest=SessionStoreTest#refreshRotatesRefreshToken",
+     "mvn -o -B -ntp test -Dtest=SessionStoreTest,TokenTest#issues* -Dsurefire.failIfNoSpecifiedTests=false"],
+)
+def test_ordinary_maven_test_commands_still_work(sample_repo: Path, command: str) -> None:
+    assert validate_test_command(command, MAVEN_ALLOW, PathGuard(sample_repo))[0] == "mvn"
+
+
+async def test_no_rejected_node_or_maven_command_reaches_the_sandbox_runner(js_repo: Path, tmp_path: Path) -> None:
+    runner = FakeRunner()
+    cases = [(NODE_ALLOW, NODE_BYPASS_ATTEMPTS, "node --test"), (MAVEN_ALLOW, MAVEN_BYPASS_ATTEMPTS, "mvn -o -B test")]
+    for allow, attempts, good in cases:
+        settings = make_settings(js_repo, tmp_path / "data", test_command=good, test_command_allowlist=allow)
+        async with MCPHub(inprocess_servers(settings, runner)) as hub:
+            for command, _reason in attempts:
+                outcome = await hub.call("run_tests", {"test_command": command})
+                assert outcome.is_error and "command rejected" in outcome.text, (command, outcome.text)
+            assert not (await hub.call("run_tests", {"test_command": good})).is_error
+    assert runner.commands == [["node", "--test"], ["mvn", "-o", "-B", "test"]]
 
 
 @pytest.fixture

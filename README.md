@@ -5,7 +5,8 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 An agent that takes a GitHub issue, finds the bug, writes a fix, runs the tests in a Docker
-sandbox and opens a pull request, but only changes things after a person approves them.
+sandbox and opens a pull request, but only changes things after a person approves them. It works
+on Python, JavaScript and Java repositories.
 
 Claude does the reasoning. Everything it touches goes through four MCP servers (GitHub, the
 filesystem, a test sandbox and a read-only documentation reader), and a LangGraph workflow decides
@@ -96,8 +97,10 @@ The short version:
 - Paths are resolved (symlinks included) and must stay inside the repository. `.env*`, `.git`, SSH
   and TLS keys and credential files can't be read, written, searched, diffed, committed or copied
   into the sandbox, in any letter case.
-- The only command the sandbox runs is the configured test command, checked against an allowlist.
-  Shell syntax, `rm`, `sudo`, `git push`, package installs and pytest `@argument-files` are refused.
+- The only command the sandbox runs is the configured test command (pytest, `node --test` or
+  Maven), checked against an allowlist and a short list of options for each runner. Shell syntax,
+  `rm`, `sudo`, `git push`, package installs, pytest `@argument-files`, Node's `--require` and
+  `--import`, and Maven goals other than `test` are refused, and Maven always runs offline.
 - Tests run on a throwaway copy of the repo in a container with no network, a read-only root, no
   capabilities, a non-root user, memory/CPU/PID limits and a timeout.
 - The GitHub token should be fine-grained and scoped to one repository. Branches get an `agent/`
@@ -135,8 +138,8 @@ replaced. With them included, resolution is 10 of 12. All of it, including the g
 and how they were produced, is in [docs/EVALUATION.md](docs/EVALUATION.md). Two of the runs are
 written up step by step in [examples/runs/](examples/runs/README.md).
 
-These numbers come from one model on two small issues, so they show the pipeline works reliably,
-not how it would do on a real codebase.
+These numbers come from one model on two small Python issues, so they show the pipeline works
+reliably, not how it would do on a real codebase.
 
 ## Screenshots
 
@@ -167,6 +170,10 @@ Open http://127.0.0.1:8501 and start a run for issue 42. By default it runs in f
 come from [examples/issues](examples/issues/README.md), pushes go to a local bare repo, and pull
 requests are written to `data/pull_requests/`, so you don't need a GitHub repository to try it.
 
+The same sample exists in JavaScript and Java. The language is detected from the repository, and
+each has its own sandbox image; [docs/SETUP.md](docs/SETUP.md#javascript-and-java) shows how to
+switch.
+
 [docs/SETUP.md](docs/SETUP.md) covers Docker Compose, pointing it at a real GitHub repository (and
 which token permissions it needs), every setting, and troubleshooting. The HTTP API is documented
 in [docs/API.md](docs/API.md).
@@ -179,14 +186,14 @@ pytest -m path_traversal        # one test category
 pytest --cov=app
 ```
 
-There are 514 tests. With Docker running and the sandbox image built they all pass; without
+There are 595 tests. With Docker running and the sandbox image built they all pass; without
 Docker, the one test that needs it is skipped. CI runs the linter and the whole suite, including
 the Docker test, on every push ([.github/workflows/tests.yml](.github/workflows/tests.yml)).
 
 The tests are grouped by risk: path traversal, protected files, dangerous commands, patch
 application, GitHub failures and so on. Each group exercises every entry point rather than one
 module. That's how a few real holes turned up, for example `.ENV` getting past the `.env` check on
-macOS, and symlinks to `.env` leaking through search. Coverage is 86% overall (92% without the
+macOS, and symlinks to `.env` leaking through search. Coverage is 87% overall (92% without the
 Streamlit UI). [docs/TESTING.md](docs/TESTING.md) has the details.
 
 ## Known limitations
@@ -204,15 +211,17 @@ Streamlit UI). [docs/TESTING.md](docs/TESTING.md) has the details.
   patches are caught before anything is written, though.
 - The documentation reader doesn't run JavaScript, needs direct internet access, and has a
   theoretical DNS-rebinding gap; the URL allowlist is the main control.
+- JavaScript means Node's built-in test runner (not Jest or Mocha) and Java means Maven (not
+  Gradle). Since tests run offline, a project's dependencies have to be baked into its sandbox
+  image. The live experiment so far has only been run on the Python sample.
 - Path checks see symlinks but not hard links.
 - The UI has no automated tests.
 
 ## What's next
 
-I'm working on JavaScript and Java support, letting the plan step look at the code before it
-guesses which files to change, a self-check for the pull request summary, per-step model
-settings, and a benchmark mode with hidden acceptance tests to compare models fairly.
-[docs/ROADMAP.md](docs/ROADMAP.md) has the details.
+I'm working on letting the plan step look at the code before it guesses which files to change, a
+self-check for the pull request summary, per-step model settings, and a benchmark mode with hidden
+acceptance tests to compare models fairly. [docs/ROADMAP.md](docs/ROADMAP.md) has the details.
 
 ## Docs
 

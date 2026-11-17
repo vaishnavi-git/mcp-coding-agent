@@ -11,7 +11,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
 import shutil
 import subprocess
 import tempfile
@@ -25,6 +24,9 @@ from mcp.server import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
+from app.languages import runner_for
+from app.reliability.test_results import parse_output
+
 from .security import CommandRejected, PathGuard, is_protected, validate_test_command
 
 # Runs code, but only in a throwaway container on a copy of the repo with no
@@ -32,7 +34,6 @@ from .security import CommandRejected, PathGuard, is_protected, validate_test_co
 SANDBOXED = ToolAnnotations(read_only_hint=True, open_world_hint=False, idempotent_hint=True)
 
 COPY_IGNORE = {".git", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox", ".venv", "node_modules"}
-_SUMMARY_RE = re.compile(r"^=+ (.+? in [\d.]+s.*?) =+\s*$", re.MULTILINE)
 
 INSTRUCTIONS = """\
 Runs the project's tests in an isolated Docker container (no network, resource
@@ -70,6 +71,8 @@ def copy_repository(src: Path, dest: Path) -> None:
 
     def ignore(directory: str, names: list[str]) -> set[str]:
         skipped = {n for n in names if n in COPY_IGNORE}
+        if "pom.xml" in names and "target" in names:
+            skipped.add("target")  # Maven build output
         for name in names:
             path = Path(directory) / name
             if is_protected(path.relative_to(src).as_posix()):
@@ -185,14 +188,9 @@ class DockerRunner:
             shutil.rmtree(workdir, ignore_errors=True)
 
 
-def summarize_pytest(stdout: str) -> str | None:
-    found = _SUMMARY_RE.findall(stdout)
-    if found:
-        return found[-1].strip()
-    tail = [ln.strip() for ln in stdout.strip().splitlines() if ln.strip()]
-    if tail and re.search(r"\b(passed|failed|error|errors|no tests ran)\b", tail[-1]):
-        return tail[-1]
-    return None
+def summarize(stdout: str, argv: list[str]) -> str | None:
+    """One line about the run, read from the test runner's own output."""
+    return parse_output(stdout, runner_for(argv))["summary"]
 
 
 def _clip(text: str, limit: int) -> str:
@@ -203,14 +201,20 @@ def _clip(text: str, limit: int) -> str:
 
 
 def format_result(result: ExecResult, runner_name: str, timeout_seconds: float, max_chars: int = 20_000) -> str:
+    parsed = parse_output(result.stdout, runner_for(result.argv))
     if result.timed_out:
         status = "TIMED OUT"
+    elif result.exit_code == 0 and not parsed["no_tests"]:
+        status = "PASSED"
     else:
-        status = "PASSED" if result.exit_code == 0 else "FAILED"
+        # pytest exits with 5 when it finds no tests; node --test and Maven exit with 0. A run
+        # where nothing was tested is not a pass for any of them.
+        status = "FAILED"
+    summary = parsed["summary"] or (f"killed after {int(timeout_seconds)}s timeout" if result.timed_out else "-")
     lines = [
         f"status: {status}",
         f"exit_code: {result.exit_code}",
-        f"summary: {summarize_pytest(result.stdout) or (f'killed after {int(timeout_seconds)}s timeout' if result.timed_out else '-')}",
+        f"summary: {summary}",
         f"command: {' '.join(result.argv)}",
         f"duration: {result.duration_s:.2f}s  sandbox: {runner_name}",
         "--- output ---",
@@ -241,10 +245,11 @@ def build_server(settings: SandboxSettings, runner: SandboxRunner | None = None)
 
     @server.tool(annotations=SANDBOXED)
     def run_tests(test_command: str = "") -> str:
-        """Run tests in the Docker sandbox and return status, exit code, pytest summary and output.
+        """Run tests in the Docker sandbox and return status, exit code, a summary line and the output.
 
         Args:
-            test_command: An allowlisted test command, e.g. "pytest -q tests/test_tokens.py".
+            test_command: An allowlisted test command, e.g. "pytest -q tests/test_tokens.py",
+                          "node --test test/sessions.test.js" or "mvn -o -B test -Dtest=SessionStoreTest".
                           Empty runs the project's default test command. No shell syntax.
         """
         command = test_command.strip() or settings.default_command

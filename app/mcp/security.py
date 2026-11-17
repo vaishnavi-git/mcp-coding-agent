@@ -3,8 +3,8 @@
 - PathGuard: confines every path to the approved repository (symlinks resolved
   before the containment check), blocks secret-bearing files, and restricts
   writes to configured directories.
-- validate_test_command: turns a test command string into a safe argv, or
-  rejects it with a specific reason.
+- validate_test_command: turns a test command string (pytest, node --test or
+  Maven) into a safe argv, or rejects it with a specific reason.
 - redact: masks credentials in anything that gets logged or returned.
 """
 
@@ -15,6 +15,8 @@ import re
 import shlex
 from pathlib import Path, PurePosixPath
 from typing import Any
+
+from app.languages import runner_for
 
 # --------------------------------------------------------------------------- paths
 
@@ -161,6 +163,16 @@ SAFE_PYTEST_FLAGS = frozenset(
 _PYTEST_VALUE_FLAG = re.compile(r"^(--tb=(short|long|line|no|native|auto)|--maxfail=\d{1,3}|--durations=\d{1,3}|-p=?no:cacheprovider)$")
 _KEYWORD_RE = re.compile(r"^[\w\s.\-\[\]:()]{1,200}$")
 
+# node --test: only the test runner, never options that load or evaluate other code
+# (--require, --import, --eval, loaders, inspectors, --env-file, ...).
+_NODE_REPORTER = re.compile(r"^--test-reporter=(tap|spec|dot)$")
+_NODE_NAME_PATTERN = re.compile(r"^[\w\s.\-]{1,200}$")
+
+# Maven: offline, quiet or batch output, an optional test selector, and the test goal only.
+_MAVEN_FLAGS = frozenset({"-o", "--offline", "-q", "--quiet", "-B", "--batch-mode", "-e", "--errors", "-ntp", "--no-transfer-progress"})
+_MAVEN_PROPERTIES = frozenset({"-DfailIfNoTests=false", "-Dsurefire.failIfNoSpecifiedTests=false"})
+_MAVEN_TEST_SELECTOR = re.compile(r"^-Dtest=[A-Za-z_][\w.*]*(#[\w*+]+)?(,[A-Za-z_][\w.*]*(#[\w*+]+)?){0,19}$")
+
 
 def validate_test_command(command: str, allowlist: tuple[str, ...], guard: PathGuard) -> list[str]:
     """Return a safe argv for ``command`` or raise CommandRejected with the reason."""
@@ -188,7 +200,25 @@ def validate_test_command(command: str, allowlist: tuple[str, ...], guard: PathG
     if prefix is None:
         raise CommandRejected(f"command is not on the allowlist (allowed: {', '.join(allowlist)})")
 
-    rest = argv[len(prefix) :]
+    runner = runner_for(argv)
+    if runner == "node":
+        _check_node_arguments(argv, guard)
+    elif runner == "maven":
+        _check_maven_arguments(argv[1:])
+    else:
+        _check_pytest_arguments(argv[len(prefix) :], guard)
+    return argv
+
+
+def _check_test_path(arg: str, guard: PathGuard) -> None:
+    target = arg.split("::", 1)[0]
+    try:
+        guard.resolve(target, must_exist=True)
+    except PathViolation as exc:
+        raise CommandRejected(f"invalid test path: {exc}") from exc
+
+
+def _check_pytest_arguments(rest: list[str], guard: PathGuard) -> None:
     i = 0
     while i < len(rest):
         arg = rest[i]
@@ -208,13 +238,53 @@ def validate_test_command(command: str, allowlist: tuple[str, ...], guard: PathG
         if arg.startswith("@"):
             # pytest reads "@file" as a file of extra arguments, which would bypass this check
             raise CommandRejected(f"argument files ({arg!r}) are not allowed")
-        target = arg.split("::", 1)[0]
-        try:
-            guard.resolve(target, must_exist=True)
-        except PathViolation as exc:
-            raise CommandRejected(f"invalid test path: {exc}") from exc
+        _check_test_path(arg, guard)
         i += 1
-    return argv
+
+
+def _check_node_arguments(argv: list[str], guard: PathGuard) -> None:
+    # "--test" has to come first: anything before it, or a file before it, makes node run that
+    # file as a script instead of running the test runner.
+    if len(argv) < 2 or argv[1] != "--test":
+        raise CommandRejected("node may only run its test runner: the command must start with 'node --test'")
+    rest = argv[2:]
+    seen_path = False
+    i = 0
+    while i < len(rest):
+        arg = rest[i]
+        if arg.startswith("-"):
+            if seen_path:
+                raise CommandRejected("options must come before the test files")
+            if _NODE_REPORTER.match(arg):
+                i += 1
+                continue
+            if arg == "--test-name-pattern" or arg.startswith("--test-name-pattern="):
+                inline = arg.startswith("--test-name-pattern=")
+                value = arg.partition("=")[2] if inline else (rest[i + 1] if i + 1 < len(rest) else "")
+                if not _NODE_NAME_PATTERN.match(value):
+                    raise CommandRejected("--test-name-pattern needs a simple pattern (letters, digits, spaces, dots and dashes)")
+                i += 1 if inline else 2
+                continue
+            raise CommandRejected(f"option {arg!r} is not allowed")
+        _check_test_path(arg, guard)
+        seen_path = True
+        i += 1
+
+
+def _check_maven_arguments(rest: list[str]) -> None:
+    goals: list[str] = []
+    for arg in rest:
+        if arg in _MAVEN_FLAGS or arg in _MAVEN_PROPERTIES or _MAVEN_TEST_SELECTOR.match(arg):
+            continue
+        if arg.startswith("-Dtest="):
+            raise CommandRejected("-Dtest needs simple class names, optionally with #method (for example -Dtest=SessionStoreTest#refresh)")
+        if arg.startswith("-"):
+            raise CommandRejected(f"option {arg!r} is not allowed")
+        goals.append(arg)
+    if goals != ["test"]:
+        raise CommandRejected(f"the only Maven goal allowed is 'test' (got {' '.join(goals) or 'none'})")
+    if not {"-o", "--offline"} & set(rest):
+        raise CommandRejected("Maven must run offline (-o): the sandbox has no network")
 
 
 # --------------------------------------------------------------------------- redaction

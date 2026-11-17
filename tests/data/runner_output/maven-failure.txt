@@ -1,0 +1,66 @@
+# exit code 1; mvn -o -B test in mcp-agent-sandbox-java:latest
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------------< example:authkit >---------------------------
+[INFO] Building authkit 0.1.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ authkit ---
+[INFO] skip non existing resourceDirectory /workspace/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ authkit ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 3 source files with javac [debug release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ authkit ---
+[INFO] skip non existing resourceDirectory /workspace/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ authkit ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug release 21] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.5.2:test (default-test) @ authkit ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running authkit.SessionStoreTest
+[ERROR] Tests run: 5, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.100 s <<< FAILURE! -- in authkit.SessionStoreTest
+[ERROR] authkit.SessionStoreTest.refreshRotatesRefreshToken -- Time elapsed: 0.003 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Expected authkit.InvalidTokenException to be thrown, but nothing was thrown.
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:73)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3128)
+	at authkit.SessionStoreTest.refreshRotatesRefreshToken(SessionStoreTest.java:53)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   SessionStoreTest.refreshRotatesRefreshToken:53 Expected authkit.InvalidTokenException to be thrown, but nothing was thrown.
+[INFO] 
+[ERROR] Tests run: 5, Failures: 1, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  2.574 s
+[INFO] Finished at: 2026-11-17T06:29:03Z
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.2:test (default-test) on project authkit: There are test failures.
+[ERROR] 
+[ERROR] See /workspace/target/surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

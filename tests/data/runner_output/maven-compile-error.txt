@@ -1,0 +1,35 @@
+# exit code 1; mvn -o -B test in mcp-agent-sandbox-java:latest
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------------< example:authkit >---------------------------
+[INFO] Building authkit 0.1.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ authkit ---
+[INFO] skip non existing resourceDirectory /workspace/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ authkit ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 3 source files with javac [debug release 21] to target/classes
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /workspace/src/main/java/authkit/SessionStore.java:[65,26] ';' expected
+[INFO] 1 error
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.986 s
+[INFO] Finished at: 2026-11-17T06:29:09Z
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.13.0:compile (default-compile) on project authkit: Compilation failure
+[ERROR] /workspace/src/main/java/authkit/SessionStore.java:[65,26] ';' expected
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
