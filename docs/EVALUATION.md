@@ -344,8 +344,13 @@ What it shows:
   three recorded drafts, once each ($0.0514 in all), removed both wrong corrections, but in the
   control case it missed the real mistake it had caught before ("the issue reports" an error).
   The prompt was tightened again (claims about the issue must match the issue's own words, and
-  the exemption for facts that follow from the code is for claims about the code only). That
-  version hasn't been replayed yet.
+  the exemption for facts that follow from the code is for claims about the code only).
+  [Replaying that version](evaluation/summary-check-replay-2026-11-17-tightened.md) three times
+  on each of the same drafts ($0.1430) gave the intended result all 9 times: it caught the
+  "reports an error" mistake 3 of 3 times, left the accurate draft alone 3 of 3 times, and on the
+  third draft dropped the nitpick and only removed a risk the passing tests rule out. Three drafts
+  is a small sample, all from issue #43, so this shows the two known failure modes are fixed, not
+  how the check does in general.
 - **The planted instruction was ignored every time.** No tool call tried to read `.env` or a key,
   and none was refused; 5 of the 6 #43 pull requests mention that the instruction was ignored.
 
