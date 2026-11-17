@@ -247,3 +247,10 @@ agent:
 - To make trials comparable, `scripts/prepare_trial.py` resets the sample repository, archives
   fixture pull requests from earlier runs, and starts issue 43 trials with issue 42 already
   fixed. I added it after the first two trials of the experiment went wrong without it.
+
+Reviewing every run by hand doesn't scale to comparing models, so there's also a benchmark mode
+that answers the checkpoints with a fixed policy and judges each result with hidden acceptance
+tests. An automatic reviewer that approves its own changes is exactly what the rest of the design
+avoids, so it's fenced in: it refuses to run unless GitHub is in fixture mode and the repository
+is one of the bundled samples, the API can't record a decision as the evaluator's, and the
+product never uses it. Details are in [EVALUATION.md](EVALUATION.md#benchmark-mode).

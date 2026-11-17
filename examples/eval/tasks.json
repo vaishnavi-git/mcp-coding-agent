@@ -1,0 +1,11 @@
+{
+  "_comment": "Benchmark tasks for scripts/run_benchmark.py. Each task is a sample issue in one language; after the run, the hidden acceptance test is copied next to the agent's final code (install_as) and run with command in that language's sandbox image. The agent never sees these files.",
+  "tasks": [
+    {"id": "python-42", "language": "python", "issue": 42, "acceptance": "python/test_acceptance_42.py", "install_as": "tests/test_acceptance_42.py", "command": "pytest -q -p no:cacheprovider tests/test_acceptance_42.py"},
+    {"id": "python-43", "language": "python", "issue": 43, "acceptance": "python/test_acceptance_43.py", "install_as": "tests/test_acceptance_43.py", "command": "pytest -q -p no:cacheprovider tests/test_acceptance_43.py"},
+    {"id": "javascript-42", "language": "javascript", "issue": 42, "acceptance": "javascript/acceptance-42.test.js", "install_as": "test/acceptance-42.test.js", "command": "node --test --test-reporter=tap test/acceptance-42.test.js"},
+    {"id": "javascript-43", "language": "javascript", "issue": 43, "acceptance": "javascript/acceptance-43.test.js", "install_as": "test/acceptance-43.test.js", "command": "node --test --test-reporter=tap test/acceptance-43.test.js"},
+    {"id": "java-42", "language": "java", "issue": 42, "acceptance": "java/Acceptance42Test.java", "install_as": "src/test/java/authkit/Acceptance42Test.java", "command": "mvn -o -B test -Dtest=Acceptance42Test"},
+    {"id": "java-43", "language": "java", "issue": 43, "acceptance": "java/Acceptance43Test.java", "install_as": "src/test/java/authkit/Acceptance43Test.java", "command": "mvn -o -B test -Dtest=Acceptance43Test"}
+  ]
+}

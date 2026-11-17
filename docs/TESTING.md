@@ -10,15 +10,16 @@ pytest --cov=app                # with line and branch coverage
 The suite needs no network and no API key. The workflow tests drive the real LangGraph workflow,
 real MCP servers, real git and real approvals. Only the model's turns are scripted
 ([tests/fakes.py](../tests/fakes.py)), and pytest runs on a copy of the repository instead of in
-Docker. The three real-Docker tests (`pytest -m docker`), one per sandbox image, run only when
-Docker and that image are available, and are skipped everywhere else. The JavaScript workflow test
+Docker. The four real-Docker tests (`pytest -m docker`), one per sandbox image plus the Java
+acceptance tests, run only when Docker and that image are available, and are skipped everywhere
+else. The JavaScript workflow test
 uses the local `node` in place of Docker and is skipped if there isn't one.
 
 ## Last full run
 
-612 tests. With Docker running and the three sandbox images built, all 612 pass; this was checked
-on macOS on Apple silicon with Docker Desktop (engine 29.9.3). Without Docker, the three
-real-Docker tests are skipped. A run takes about two minutes on a laptop.
+625 tests. With Docker running and the three sandbox images built, all 625 pass; this was checked
+on macOS on Apple silicon with Docker Desktop (engine 29.9.3). Without Docker, the four
+real-Docker tests are skipped. A run takes about two and a half minutes on a laptop.
 
 | Category | Marker | Tests passing |
 |---|---|---|
@@ -104,7 +105,12 @@ category files isn't listed anywhere.
   midway).
 - **Evaluation.** Every metric checked against six recorded runs with known outcomes (published,
   recovered after a failed test run, stopped, rejected, out of budget, still waiting) and
-  hand-computed values, including n/a cases.
+  hand-computed values, including n/a cases. Per-step models: each call priced at its own model,
+  Haiku's two rate cards, cost by step, the cache hit rate and grouping by setup.
+- **Benchmark mode.** It refuses outside fixture mode and the bundled samples (as a library and
+  as a script), the API can't answer as the evaluator, the review policy, a scripted run reviewed
+  and judged end to end, and the hidden acceptance tests themselves: in each language they pass on
+  a right fix and fail on the code as shipped and on two kinds of wrong fix (Java in real Docker).
 - **The docs.** Every setting is in `.env.example`, every route is in `docs/API.md`,
   `openapi.json` is current, the README tool table and the workflow diagram match the code, links
   resolve, every test cited in `docs/SECURITY.md` exists, there's no model name or key in the

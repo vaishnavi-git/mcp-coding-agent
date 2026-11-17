@@ -57,6 +57,8 @@ SUMMARY_ROWS: list[tuple[str, Any]] = [
     ("Cost per resolved task", lambda a: usd(a["cost_per_resolved_task_usd"])),
     ("Cache hit rate (prompt tokens read from cache)", lambda a: pct(a["cache_hit_rate"])),
     ("PR text corrected by the summary check", lambda a: NA if not a["summary_checks"] else f"{a['summary_checks_corrected']} of {a['summary_checks']}"),
+    ("Hidden acceptance tests passed (benchmark runs)", lambda a: NA if not a["acceptance_runs"] else f"{pct(a['acceptance_pass_rate'])} ({a['acceptance_passed']} of {a['acceptance_runs']})"),
+    ("Checkpoints answered by", lambda a: ", ".join(f"{k}: {v}" for k, v in a["reviewers"].items()) or NA),
 ]
 
 
@@ -103,15 +105,15 @@ def render_markdown(summary: dict[str, Any], rows: list[dict[str, Any]], *, sour
     out += [
         "## Runs",
         "",
-        "| Run | Issue | Setup | Status | Resolved | Test runs (passed) | Tool calls | Model calls | Cost | Wall clock | Agent time | Files edited | Unplanned | Reverted |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "| Run | Issue | Setup | Status | Resolved | Acceptance | Test runs (passed) | Tool calls | Model calls | Cost | Wall clock | Agent time | Files edited | Unplanned | Reverted |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in rows:
         unplanned = NA if r["unplanned_edits"] is None else str(len(r["unplanned_edits"]))
         status = f"{r['status']} ({r['failure_code']})" if r["failure_code"] else r["status"]
         out.append(
             f"| `{r['run_id']}` | #{r['issue']} | `{r['setup']}` | {status} | "
-            f"{'yes' if r['resolved'] else 'no'} | {r['test_runs']} ({r['test_runs_passed']}) | {r['tool_calls']} | {r['llm_calls']} | {usd(r['cost_usd'])} | "
+            f"{'yes' if r['resolved'] else 'no'} | {r['acceptance'] or '-'} | {r['test_runs']} ({r['test_runs_passed']}) | {r['tool_calls']} | {r['llm_calls']} | {usd(r['cost_usd'])} | "
             f"{secs(r['wall_seconds'])} | {secs(r['agent_seconds'])} | {len(r['files_edited'])} | {unplanned} | {len(r['reverted_edits'])} |"
         )
     out.append("")

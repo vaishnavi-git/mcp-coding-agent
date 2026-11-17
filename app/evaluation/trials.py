@@ -1,14 +1,14 @@
-"""Prepare the sample repository for one evaluation trial (docs/EVALUATION.md, protocol).
+"""Prepare a sample repository for one evaluation trial (docs/EVALUATION.md, protocol).
 
 Every trial starts from the same state:
 
-- a fresh copy of examples/sample-repo with a fresh local ``origin``;
+- a fresh copy of the bundled sample (Python, JavaScript or Java) with a fresh local ``origin``;
 - fixture-mode pull requests from earlier runs moved out of ``DATA_DIR/pull_requests``
   (they live outside the repository, and an old one with the same branch name makes
   ``create_pull_request`` refuse, correctly, to open a duplicate);
-- for issue #43, issue #42 already fixed and committed. The sample repository ships with
-  #42's bug, which fails one existing test; without this, an issue-43 run cannot pass the
-  tests without also fixing an unrelated issue.
+- for issue #43, issue #42 already fixed and committed. The samples ship with #42's bug,
+  which fails one existing test; without this, an issue-43 run cannot pass the tests
+  without also fixing an unrelated issue.
 
 Found while running the first experiment (2026-11-15): the first two trials ran without
 these steps and were set aside.
@@ -35,9 +35,37 @@ _ROTATION_FIX = (
     "        return new_session\n"
 )
 
-# Issue -> changes committed before the trial starts: (file, old text, new text, commit message).
-STARTING_POINTS: dict[int, list[tuple[str, str, str, str]]] = {
-    43: [("authkit/sessions.py", _ROTATION_BUG, _ROTATION_FIX, "Fix refresh token rotation (issue 42): starting point for issue 43 trials")],
+_JS_ROTATION_BUG = (
+    "    this._byAccess.delete(session.accessToken);\n"
+    "    this._byAccess.set(newSession.accessToken, newSession);\n"
+    "    return newSession;\n"
+)
+_JS_ROTATION_FIX = (
+    "    this._byRefresh.delete(refreshToken);\n"
+    "    this._byAccess.delete(session.accessToken);\n"
+    "    this._byAccess.set(newSession.accessToken, newSession);\n"
+    "    this._byRefresh.set(newSession.refreshToken, newSession);\n"
+    "    return newSession;\n"
+)
+_JAVA_ROTATION_BUG = (
+    "        byAccess.remove(session.accessToken());\n"
+    "        byAccess.put(newSession.accessToken(), newSession);\n"
+    "        return newSession;\n"
+)
+_JAVA_ROTATION_FIX = (
+    "        byRefresh.remove(refreshToken);\n"
+    "        byAccess.remove(session.accessToken());\n"
+    "        byAccess.put(newSession.accessToken(), newSession);\n"
+    "        byRefresh.put(newSession.refreshToken(), newSession);\n"
+    "        return newSession;\n"
+)
+_MESSAGE = "Fix refresh token rotation (issue 42): starting point for issue 43 trials"
+
+# (language, issue) -> changes committed before the trial starts: (file, old text, new text, commit message).
+STARTING_POINTS: dict[tuple[str, int], list[tuple[str, str, str, str]]] = {
+    ("python", 43): [("authkit/sessions.py", _ROTATION_BUG, _ROTATION_FIX, _MESSAGE)],
+    ("javascript", 43): [("src/sessions.js", _JS_ROTATION_BUG, _JS_ROTATION_FIX, _MESSAGE)],
+    ("java", 43): [("src/main/java/authkit/SessionStore.java", _JAVA_ROTATION_BUG, _JAVA_ROTATION_FIX, _MESSAGE)],
 }
 
 
@@ -52,11 +80,11 @@ def archive_pull_requests(data_dir: Path) -> Path | None:
     return target
 
 
-def prepare_trial(issue: int, repo: Path, data_dir: Path) -> dict[str, object]:
+def prepare_trial(issue: int, repo: Path, data_dir: Path, language: str = "python") -> dict[str, object]:
     """Reset ``repo`` and ``data_dir`` for a trial of ``issue``; returns what was done."""
-    repo = setup_sample_repo(Path(repo), force=True)
+    repo = setup_sample_repo(Path(repo), force=True, language=language)
     commits = []
-    for rel, old, new, message in STARTING_POINTS.get(issue, []):
+    for rel, old, new, message in STARTING_POINTS.get((language, issue), []):
         path = repo / rel
         text = path.read_text()
         if text.count(old) != 1:

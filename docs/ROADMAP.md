@@ -80,26 +80,26 @@ the next experiment to show.
 Nothing has been switched to a cheaper model yet. Investigation is half the cost, so it's the
 obvious candidate for Haiku 5.5, but that should come out of a comparison, not a guess.
 
-## A benchmark mode for comparing models
+## A benchmark mode for comparing models (done)
 
-Comparing setups fairly needs more runs than I can review by hand, so there will be an
-evaluation-only harness:
+Comparing setups fairly needs more runs than I can review by hand, so there's now an
+evaluation-only harness ([EVALUATION.md](EVALUATION.md#benchmark-mode)):
 
 - It answers the checkpoints with a fixed policy: approve the plan and the patch, allow one more
   attempt at a recovery and then stop, publish up to a pull request. Those decisions are recorded
   as `decided_by: evaluator`, not as a person.
 - After each run it copies hidden acceptance tests (`examples/eval/acceptance/`, never shown to
-  the agent) next to the final code and runs them in the sandbox.
+  the agent) next to the final code and runs them in the sandbox. They're checked to pass on a
+  right fix and fail on the obvious wrong ones, in all three languages.
 - Tasks come from `examples/eval/tasks.json`, and it's started with
-  `scripts/run_benchmark.py --setup <name> --runs <n>`.
+  `scripts/run_benchmark.py`, with `--model`, `--step-model` and `--step-effort` to pick the
+  setup and `--max-total-cost` to cap the spend.
 - It refuses to run unless `GITHUB_MODE=fixture` and the repository is one of the bundled samples
   under `workspaces/`. The API and UI never use it; the agent itself always needs a person.
 
-The first comparison will be `claude-sonnet-5` against `claude-sonnet-5-5`, 10 runs each under
-the same harness. The hand-reviewed results from the first experiment stay as they are and won't
-be mixed in.
+## Still to do
 
-## Tests for the rest
-
-- The benchmark harness: it refuses outside the samples, records evaluator decisions, and its
-  acceptance tests pass on a right fix and fail on a wrong one.
+The first comparison: `claude-sonnet-5` against `claude-sonnet-5-5` in the benchmark, the same
+tasks and the same number of runs for each. The hand-reviewed results from the first experiment
+stay as they are and won't be mixed in. After that, the obvious next question is whether the
+investigate step can run on Haiku 5.5 without losing accuracy.

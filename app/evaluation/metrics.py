@@ -9,6 +9,7 @@ run ever failed.
 
 from __future__ import annotations
 
+import json
 import math
 import re
 from collections import defaultdict
@@ -55,6 +56,16 @@ def _human_wait_seconds(events: list[dict[str, Any]]) -> float:
     return total
 
 
+def _detail(event: dict[str, Any]) -> dict[str, Any]:
+    detail = event.get("detail")
+    if isinstance(detail, str):
+        try:
+            detail = json.loads(detail)
+        except json.JSONDecodeError:
+            return {}
+    return detail if isinstance(detail, dict) else {}
+
+
 def files_in_diff(diff: str | None) -> set[str]:
     """Paths that still have a change in a get_git_diff result."""
     return {a or b for a, b in _DIFF_PATH.findall(diff or "")}
@@ -89,6 +100,9 @@ def run_metrics(record: RunRecord) -> dict[str, Any]:
         known = by_step_cost.get(purpose, 0.0)
         by_step_cost[purpose] = None if known is None or c.get("cost_usd") is None else known + c["cost_usd"]
     check = (state.get("publication_draft") or {}).get("summary_check") or {}
+    decisions = [d for key in ("plan_approvals", "approvals", "recovery_decisions", "publication_approvals") for d in state.get(key) or []]
+    reviewers = sorted({str(d.get("decided_by") or "human") for d in decisions})
+    acceptance = next((_detail(e) for e in reversed(record.events) if e["kind"] == "acceptance_tests"), None)
 
     return {
         "run_id": run["id"],
@@ -121,6 +135,8 @@ def run_metrics(record: RunRecord) -> dict[str, Any]:
         "calls_by_step": dict(sorted(by_step_calls.items())),
         "cost_by_step": dict(sorted(by_step_cost.items())),
         "summary_check": check.get("status"),
+        "reviewer": "/".join(reviewers) if reviewers else None,
+        "acceptance": acceptance.get("status") if acceptance else None,  # PASSED, FAILED, TIMED OUT, NOT RUN; None outside the benchmark
         "cost_usd": sum(c.get("cost_usd") or 0.0 for c in successful_llm) if cost_known else None,
         "wall_seconds": (ended - started).total_seconds() if finished and started and ended else None,
         "agent_seconds": sum(e.get("duration_ms") or 0 for e in timeline) / 1000 if timeline else None,
@@ -181,6 +197,7 @@ def _aggregate(rows: list[dict[str, Any]]) -> dict[str, Any]:
     total_cost = sum(costs) if cost_known else None  # type: ignore[arg-type]
     prompt_tokens = sum(r["input_tokens"] + r["cache_read_tokens"] + r["cache_write_tokens"] for r in done)
     checked = [r for r in done if r["summary_check"] in ("ok", "corrected")]
+    judged = [r for r in done if r["acceptance"] is not None]
     return {
         "runs": len(rows),
         "finished": len(done),
@@ -216,6 +233,10 @@ def _aggregate(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "cost_by_step": _steps(done, total_cost),
         "summary_checks": len(checked),
         "summary_checks_corrected": sum(1 for r in checked if r["summary_check"] == "corrected"),
+        "acceptance_runs": len(judged),
+        "acceptance_passed": sum(1 for r in judged if r["acceptance"] == "PASSED"),
+        "acceptance_pass_rate": ratio(sum(1 for r in judged if r["acceptance"] == "PASSED"), len(judged)),
+        "reviewers": dict(sorted(_count(r["reviewer"] or "none" for r in done).items())),
         "llm_latency_ms": _distribution(p for r in done for p in r["llm_latency_ms"]),
         "tool_duration_ms": _distribution(p for r in done for p in r["tool_duration_ms"]),
         "step_duration_ms": _distribution(p for r in done for p in r["step_duration_ms"]),

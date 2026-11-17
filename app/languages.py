@@ -23,6 +23,7 @@ class LanguageProfile:
     test_command_allowlist: tuple[str, ...]
     sample: str  # bundled sample repository, under examples/
     issues_file: str  # its issues for fixture mode, under examples/issues/
+    sample_writable_paths: tuple[str, ...]  # WRITABLE_PATHS that fit the sample
 
 
 PROFILES: dict[str, LanguageProfile] = {
@@ -35,6 +36,7 @@ PROFILES: dict[str, LanguageProfile] = {
         test_command_allowlist=("pytest", "python -m pytest"),
         sample="sample-repo",
         issues_file="sample-repo.json",
+        sample_writable_paths=("authkit", "tests"),
     ),
     "javascript": LanguageProfile(
         name="javascript",
@@ -45,6 +47,7 @@ PROFILES: dict[str, LanguageProfile] = {
         test_command_allowlist=("node --test",),
         sample="sample-repo-js",
         issues_file="sample-repo-js.json",
+        sample_writable_paths=("src", "test"),
     ),
     "java": LanguageProfile(
         name="java",
@@ -55,6 +58,7 @@ PROFILES: dict[str, LanguageProfile] = {
         test_command_allowlist=("mvn",),
         sample="sample-repo-java",
         issues_file="sample-repo-java.json",
+        sample_writable_paths=("src",),
     ),
 }
 

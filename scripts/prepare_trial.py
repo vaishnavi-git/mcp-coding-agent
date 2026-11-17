@@ -1,7 +1,8 @@
 """Prepare the sample repository for one evaluation trial, then start the run yourself.
 
-Resets the sample repository, moves earlier fixture pull requests to an archive, and for
-issue 43 commits issue 42's fix first so the tests start green (see
+Resets the sample repository (the language comes from PROJECT_LANGUAGE / REPO_PATH), moves
+earlier fixture pull requests to an archive, and for issue 43 commits issue 42's fix first
+so the tests start green (see
 app/evaluation/trials.py and docs/EVALUATION.md).
 
 Usage: python scripts/prepare_trial.py 42
@@ -25,7 +26,7 @@ def main() -> None:
     parser.add_argument("--env-file", type=Path, help="settings file (default: .env in the project)")
     args = parser.parse_args()
     settings = Settings.from_env(args.env_file)
-    done = prepare_trial(args.issue, settings.repo_path, settings.data_dir)
+    done = prepare_trial(args.issue, settings.repo_path, settings.data_dir, language=settings.project_language)
     print(f"Repository ready for issue #{args.issue}.")
     for message in done["starting_commits"]:
         print(f"  starting point: {message}")

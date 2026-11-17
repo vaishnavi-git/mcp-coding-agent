@@ -19,6 +19,10 @@
   file with its two rate cards, and each run records its setup.
 - The evaluation report groups runs by setup and adds cost by step, the cache hit rate, and how
   often the summary check corrected the pull request text.
+- Benchmark mode (`scripts/run_benchmark.py`): the sample issues in all three languages, an
+  automatic reviewer recorded as `evaluator`, and hidden acceptance tests run after each run. It
+  refuses to run outside fixture mode and the bundled samples. `scripts/evaluate.py --batch`
+  reports one benchmark, including the acceptance pass rate.
 - The long implementation plan is now split into [design notes](docs/DESIGN.md), this changelog
   and a [roadmap](docs/ROADMAP.md). The README has been rewritten.
 - Comments and docstrings no longer refer to the stages the project was built in.

@@ -116,6 +116,46 @@ python scripts/render_run.py <run_id> --out examples/runs/<name>.md --note "Live
 Commit the generated files unchanged, and add a short dated note under [Results](#results) that
 links to them and says what was run.
 
+## Benchmark mode
+
+Comparing models, or a cheaper model for one step, needs more runs than one person can review
+carefully. `scripts/run_benchmark.py` runs the sample tasks with an automatic reviewer instead and
+judges each result with tests the agent never sees. It is only for evaluation.
+
+**Tasks.** [examples/eval/tasks.json](../examples/eval/tasks.json) lists issues #42 and #43 in
+Python, JavaScript and Java. Each task has a hidden acceptance test in
+[examples/eval/acceptance/](../examples/eval/acceptance) that checks the behavior the issue asks
+for through the library's public API, so any reasonable fix passes it.
+
+**What it does for each run:**
+1. prepares the sample the same way `prepare_trial.py` does (issue #43 starts with #42 fixed);
+2. runs the agent and answers every checkpoint with a fixed policy: approve the plan and the
+   patches, allow one more attempt at the first recovery checkpoint and stop at the second, and
+   publish up to a pull request (in fixture mode, a local bare repository and a JSON file);
+3. if the agent's own tests passed, copies the acceptance test next to the final code (in a
+   throwaway copy, never in the repository) and runs it in that language's sandbox image;
+4. records the result as an `acceptance_tests` event on the run.
+
+**Where it refuses to run.** Anywhere but `GITHUB_MODE=fixture` with the repository being one of
+the bundled samples under `workspaces/`. It approves its own changes, so it must never be pointed
+at a real repository. Its decisions are recorded as `decided_by: evaluator`, which the API cannot
+set, and the API and UI never use it: the agent itself always waits for a person.
+
+```bash
+python scripts/run_benchmark.py --tasks python-42,python-43 --runs 5 --max-total-cost 1.50
+python scripts/run_benchmark.py --model claude-sonnet-5-5 --runs 5 --max-total-cost 1.50
+python scripts/run_benchmark.py --step-model investigate=claude-haiku-5-5 --runs 5
+python scripts/evaluate.py --batch data/benchmarks/<time>.json --out docs/evaluation/<name>.md
+```
+
+`--max-total-cost` (default $2.00) stops before the next run once that much has been spent, on
+top of `MAX_TASK_COST_USD` for each run. The report adds the acceptance pass rate and who
+answered the checkpoints.
+
+What it changes about the numbers: with no human feedback, a wrong patch is applied rather than
+rejected, so the acceptance tests are what catch it. Benchmark results and hand-reviewed results
+measure different things and shouldn't be pooled.
+
 ## Cost and latency
 
 Every model call records its token counts, latency and cost. Every tool call records its
@@ -131,8 +171,8 @@ What the numbers include and leave out:
 ## Threats to validity
 
 - **Two issues in one small repository.** The results show whether the pipeline works end to
-  end, not how a model does on real-world issues. More tasks (other repositories, with held-out
-  acceptance tests) are listed under future improvements in the README.
+  end, not how a model does on real-world issues. The benchmark adds the same two issues in
+  JavaScript and Java, with held-out acceptance tests, but it's still one small library.
 - **The reviewer shapes the outcome.** Approvals, rejections and feedback change what happens
   next. The protocol fixes the reviewer's rules, but one person reviewing their own experiments
   is not blind.

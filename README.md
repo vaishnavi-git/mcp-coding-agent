@@ -189,7 +189,7 @@ pytest -m path_traversal        # one test category
 pytest --cov=app
 ```
 
-There are 612 tests. With Docker running and the sandbox image built they all pass; without
+There are 625 tests. With Docker running and the sandbox image built they all pass; without
 Docker, the one test that needs it is skipped. CI runs the linter and the whole suite, including
 the Docker test, on every push ([.github/workflows/tests.yml](.github/workflows/tests.yml)).
 
@@ -222,8 +222,9 @@ Streamlit UI). [docs/TESTING.md](docs/TESTING.md) has the details.
 
 ## What's next
 
-Next is a benchmark mode with hidden acceptance tests, to compare models and per-step settings
-fairly, and then using it to compare Claude Sonnet 5.5 with Sonnet 5. [docs/ROADMAP.md](docs/ROADMAP.md) has the details.
+Next is using the new benchmark mode (an automatic reviewer plus hidden acceptance tests, sample
+issues only) to compare Claude Sonnet 5.5 with Sonnet 5, and then to see whether investigation can
+run on Haiku 5.5. [docs/ROADMAP.md](docs/ROADMAP.md) has the details.
 
 ## Docs
 

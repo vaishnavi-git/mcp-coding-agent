@@ -83,7 +83,11 @@ The person running the agent and approving its changes is trusted.
     - A per-run model-call limit and cost limit.
     - Bounded retries with backoff.
     - Bounded fix attempts and revisions.
-11. **Prompt-injection posture.** Issue text, files, pages and test output are framed as data in
+11. **The benchmark's automatic reviewer stays in the lab.** `scripts/run_benchmark.py` answers
+    checkpoints itself, so it refuses to run unless `GITHUB_MODE=fixture` and the repository is
+    one of the bundled samples under `workspaces/`. Its decisions are recorded as
+    `decided_by: evaluator`; the API has no way to record that, and the product never uses it.
+12. **Prompt-injection posture.** Issue text, files, pages and test output are framed as data in
     the prompts. Even a fully persuaded model has no tool that writes, runs commands or publishes.
 
 ## Requirements, controls and tests
