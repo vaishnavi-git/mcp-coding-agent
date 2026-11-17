@@ -48,7 +48,7 @@ include = ["app*"]
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-q --strict-markers"
-# The spec test categories (discovery, path_traversal, ...) are registered in tests/conftest.py
+# The test categories (discovery, path_traversal, ...) are registered in tests/conftest.py
 # from tests/spec_matrix.py.
 markers = ["docker: needs a running Docker daemon"]
 

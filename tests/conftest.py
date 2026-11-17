@@ -33,7 +33,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus: int, config: pytest.Config) -> None:
-    """One line per spec category: how many of its tests passed, failed or were skipped."""
+    """One line per test category: how many of its tests passed, failed or were skipped."""
     by_node = config.stash.get(_CATEGORIES_BY_NODE, {})
     outcomes: dict[str, tuple[str, set[str]]] = {}
     for kind in _RANK:
@@ -46,7 +46,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus: int, config: pytest.Co
                 outcomes[report.nodeid] = (kind, keywords)
     if not outcomes:
         return
-    terminalreporter.write_sep("-", "spec test categories (tests/spec_matrix.py)")
+    terminalreporter.write_sep("-", "test categories (tests/spec_matrix.py)")
     for marker, title in SPEC_CATEGORIES.items():
         counts = {kind: 0 for kind in ("passed", "failed", "skipped")}
         for kind, keywords in outcomes.values():
