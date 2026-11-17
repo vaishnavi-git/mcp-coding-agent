@@ -22,7 +22,10 @@
 - Benchmark mode (`scripts/run_benchmark.py`): the sample issues in all three languages, an
   automatic reviewer recorded as `evaluator`, and hidden acceptance tests run after each run. It
   refuses to run outside fixture mode and the bundled samples. `scripts/evaluate.py --batch`
-  reports one benchmark, including the acceptance pass rate.
+  reports one benchmark, including the acceptance pass rate. `--batch` can be repeated, and with
+  more than one setup the cost-by-step table has a column for each.
+- Benchmark results for Claude Sonnet 5 against Sonnet 5.5 on the Python sample
+  ([docs/evaluation/results-2026-11-17-benchmark.md](docs/evaluation/results-2026-11-17-benchmark.md)).
 - The long implementation plan is now split into [design notes](docs/DESIGN.md), this changelog
   and a [roadmap](docs/ROADMAP.md). The README has been rewritten.
 - Comments and docstrings no longer refer to the stages the project was built in.

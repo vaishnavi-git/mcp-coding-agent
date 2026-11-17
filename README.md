@@ -144,6 +144,14 @@ written up step by step in [examples/runs/](examples/runs/README.md).
 These numbers come from one model on two small Python issues, so they show the pipeline works
 reliably, not how it would do on a real codebase.
 
+A later benchmark compared Claude Sonnet 5 with Sonnet 5.5 on the same two issues, 3 runs each per
+model, with an automatic reviewer and hidden acceptance tests. Both passed all 12 acceptance tests.
+Sonnet 5.5 cost $0.10 a run against $0.15 and took half the time. Almost all of the difference
+was on #43, which needs no code change and where Sonnet 5 spent far more tokens thinking. Neither
+model made an unplanned edit now that the plan is written after searching the code.
+[docs/EVALUATION.md](docs/EVALUATION.md#benchmark-of-2026-11-17-sonnet-5-and-sonnet-55) has the
+details and the limits.
+
 ## Screenshots
 
 The fix from a run of #42, with the run list on the left:
@@ -189,7 +197,7 @@ pytest -m path_traversal        # one test category
 pytest --cov=app
 ```
 
-There are 625 tests. With Docker running and the three sandbox images built they all pass; without
+There are 628 tests. With Docker running and the three sandbox images built they all pass; without
 Docker, the four tests that need it are skipped. CI builds all three images and runs the linter
 and the whole suite, Docker tests included, on every push
 ([.github/workflows/tests.yml](.github/workflows/tests.yml)).

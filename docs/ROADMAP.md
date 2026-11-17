@@ -99,7 +99,13 @@ evaluation-only harness ([EVALUATION.md](EVALUATION.md#benchmark-mode)):
 
 ## Still to do
 
-The first comparison: `claude-sonnet-5` against `claude-sonnet-5-5` in the benchmark, the same
-tasks and the same number of runs for each. The hand-reviewed results from the first experiment
-stay as they are and won't be mixed in. After that, the obvious next question is whether the
-investigate step can run on Haiku 5.5 without losing accuracy.
+The first comparison is done ([results](EVALUATION.md#benchmark-of-2026-11-17-sonnet-5-and-sonnet-55)):
+on the two Python issues both models passed every hidden test, and Sonnet 5.5 was a third
+cheaper and twice as fast. What it pointed at next:
+
+- **Give the summary check the plan.** In 2 of the 5 runs it corrected, its corrections were
+  pedantic or wrong, once because it can't see the plan and so treated a true statement about
+  the plan as unsupported.
+- **Try Haiku 5.5 for investigation**, still the largest share of the cost with either model.
+- **Run the benchmark on the JavaScript and Java tasks**, and with more runs, before reading much
+  into small differences.
