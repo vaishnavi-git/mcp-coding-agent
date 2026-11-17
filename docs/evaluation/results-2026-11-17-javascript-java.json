@@ -1,0 +1,1682 @@
+{
+  "source": "data/agent.db",
+  "selection": "benchmark 20261117T212306",
+  "summary": {
+    "overall": {
+      "runs": 4,
+      "finished": 4,
+      "unfinished": 0,
+      "status_counts": {
+        "published": 4
+      },
+      "resolved": 4,
+      "resolution_rate": 1.0,
+      "published_rate": 1.0,
+      "first_attempt_pass_rate": 1.0,
+      "test_run_pass_rate": 1.0,
+      "recovery_rate": null,
+      "runs_with_test_failure": 0,
+      "mean_tool_calls": 21.25,
+      "mean_tool_calls_by_model": 6.25,
+      "mean_tool_calls_rejected": 0.0,
+      "mean_tool_retries": 0.0,
+      "mean_llm_calls": 10.25,
+      "mean_input_tokens": 9191.0,
+      "mean_output_tokens": 5297.0,
+      "mean_wall_seconds": 54.719,
+      "median_wall_seconds": 53.003,
+      "mean_agent_seconds": 48.8185,
+      "mean_human_wait_seconds": 3.31575,
+      "files_edited": 6,
+      "unplanned_edits": 0,
+      "unplanned_edit_rate": 0.0,
+      "reverted_edits": 0,
+      "reverted_edit_rate": 0.0,
+      "total_cost_usd": 0.4459178,
+      "mean_cost_per_run_usd": 0.11147945,
+      "cost_per_resolved_task_usd": 0.11147945,
+      "cache_hit_rate": 0.41811229027094327,
+      "cost_by_step": {
+        "propose": {
+          "calls": 12,
+          "cost_usd": 0.1391348,
+          "share": 0.31201894160762367
+        },
+        "investigate": {
+          "calls": 9,
+          "cost_usd": 0.117041,
+          "share": 0.26247214172656935
+        },
+        "check_publication": {
+          "calls": 4,
+          "cost_usd": 0.0696,
+          "share": 0.1560825784483149
+        },
+        "plan": {
+          "calls": 4,
+          "cost_usd": 0.05372999999999999,
+          "share": 0.12049305948316034
+        },
+        "draft_publication": {
+          "calls": 4,
+          "cost_usd": 0.035714,
+          "share": 0.08009099434918275
+        },
+        "summary": {
+          "calls": 4,
+          "cost_usd": 0.022272,
+          "share": 0.04994642510346078
+        },
+        "plan_searches": {
+          "calls": 4,
+          "cost_usd": 0.008426,
+          "share": 0.01889585928168824
+        }
+      },
+      "summary_checks": 4,
+      "summary_checks_corrected": 1,
+      "acceptance_runs": 4,
+      "acceptance_passed": 4,
+      "acceptance_pass_rate": 1.0,
+      "reviewers": {
+        "evaluator": 4
+      },
+      "llm_latency_ms": {
+        "check_publication": {
+          "n": 4,
+          "p50": 6265,
+          "p95": 8269,
+          "max": 8269
+        },
+        "draft_publication": {
+          "n": 4,
+          "p50": 4788,
+          "p95": 6254,
+          "max": 6254
+        },
+        "investigate": {
+          "n": 9,
+          "p50": 2017,
+          "p95": 8273,
+          "max": 8273
+        },
+        "plan": {
+          "n": 4,
+          "p50": 6258,
+          "p95": 10037,
+          "max": 10037
+        },
+        "plan_searches": {
+          "n": 4,
+          "p50": 2050,
+          "p95": 3572,
+          "max": 3572
+        },
+        "propose": {
+          "n": 12,
+          "p50": 3173,
+          "p95": 4745,
+          "max": 4745
+        },
+        "summary": {
+          "n": 4,
+          "p50": 3008,
+          "p95": 4719,
+          "max": 4719
+        }
+      },
+      "tool_duration_ms": {
+        "apply_patch": {
+          "n": 6,
+          "p50": 1,
+          "p95": 4,
+          "max": 4
+        },
+        "commit_changes": {
+          "n": 4,
+          "p50": 78,
+          "p95": 93,
+          "max": 93
+        },
+        "create_branch": {
+          "n": 4,
+          "p50": 59,
+          "p95": 110,
+          "max": 110
+        },
+        "create_pull_request": {
+          "n": 4,
+          "p50": 29,
+          "p95": 31,
+          "max": 31
+        },
+        "get_git_diff": {
+          "n": 4,
+          "p50": 103,
+          "p95": 646,
+          "max": 646
+        },
+        "get_github_issue": {
+          "n": 4,
+          "p50": 4,
+          "p95": 12,
+          "max": 12
+        },
+        "propose_patch": {
+          "n": 12,
+          "p50": 3,
+          "p95": 25,
+          "max": 25
+        },
+        "push_branch": {
+          "n": 4,
+          "p50": 90,
+          "p95": 100,
+          "max": 100
+        },
+        "read_repository_file": {
+          "n": 18,
+          "p50": 3,
+          "p95": 24,
+          "max": 24
+        },
+        "run_tests": {
+          "n": 4,
+          "p50": 4668,
+          "p95": 6131,
+          "max": 6131
+        },
+        "search_repository": {
+          "n": 21,
+          "p50": 2,
+          "p95": 17,
+          "max": 25
+        }
+      },
+      "step_duration_ms": {
+        "apply": {
+          "n": 4,
+          "p50": 113,
+          "p95": 682,
+          "max": 682
+        },
+        "draft_publication": {
+          "n": 4,
+          "p50": 10936,
+          "p95": 14534,
+          "max": 14534
+        },
+        "fetch_issue": {
+          "n": 4,
+          "p50": 5,
+          "p95": 12,
+          "max": 12
+        },
+        "finalize": {
+          "n": 4,
+          "p50": 3011,
+          "p95": 4723,
+          "max": 4723
+        },
+        "investigate": {
+          "n": 4,
+          "p50": 8910,
+          "p95": 10035,
+          "max": 10035
+        },
+        "plan": {
+          "n": 4,
+          "p50": 8520,
+          "p95": 13641,
+          "max": 13641
+        },
+        "propose": {
+          "n": 4,
+          "p50": 8463,
+          "p95": 10041,
+          "max": 10041
+        },
+        "publish": {
+          "n": 4,
+          "p50": 256,
+          "p95": 314,
+          "max": 314
+        },
+        "run_tests": {
+          "n": 4,
+          "p50": 4669,
+          "p95": 6140,
+          "max": 6140
+        }
+      }
+    },
+    "by_model": {
+      "claude-sonnet-5-5": {
+        "runs": 4,
+        "finished": 4,
+        "unfinished": 0,
+        "status_counts": {
+          "published": 4
+        },
+        "resolved": 4,
+        "resolution_rate": 1.0,
+        "published_rate": 1.0,
+        "first_attempt_pass_rate": 1.0,
+        "test_run_pass_rate": 1.0,
+        "recovery_rate": null,
+        "runs_with_test_failure": 0,
+        "mean_tool_calls": 21.25,
+        "mean_tool_calls_by_model": 6.25,
+        "mean_tool_calls_rejected": 0.0,
+        "mean_tool_retries": 0.0,
+        "mean_llm_calls": 10.25,
+        "mean_input_tokens": 9191.0,
+        "mean_output_tokens": 5297.0,
+        "mean_wall_seconds": 54.719,
+        "median_wall_seconds": 53.003,
+        "mean_agent_seconds": 48.8185,
+        "mean_human_wait_seconds": 3.31575,
+        "files_edited": 6,
+        "unplanned_edits": 0,
+        "unplanned_edit_rate": 0.0,
+        "reverted_edits": 0,
+        "reverted_edit_rate": 0.0,
+        "total_cost_usd": 0.4459178,
+        "mean_cost_per_run_usd": 0.11147945,
+        "cost_per_resolved_task_usd": 0.11147945,
+        "cache_hit_rate": 0.41811229027094327,
+        "cost_by_step": {
+          "propose": {
+            "calls": 12,
+            "cost_usd": 0.1391348,
+            "share": 0.31201894160762367
+          },
+          "investigate": {
+            "calls": 9,
+            "cost_usd": 0.117041,
+            "share": 0.26247214172656935
+          },
+          "check_publication": {
+            "calls": 4,
+            "cost_usd": 0.0696,
+            "share": 0.1560825784483149
+          },
+          "plan": {
+            "calls": 4,
+            "cost_usd": 0.05372999999999999,
+            "share": 0.12049305948316034
+          },
+          "draft_publication": {
+            "calls": 4,
+            "cost_usd": 0.035714,
+            "share": 0.08009099434918275
+          },
+          "summary": {
+            "calls": 4,
+            "cost_usd": 0.022272,
+            "share": 0.04994642510346078
+          },
+          "plan_searches": {
+            "calls": 4,
+            "cost_usd": 0.008426,
+            "share": 0.01889585928168824
+          }
+        },
+        "summary_checks": 4,
+        "summary_checks_corrected": 1,
+        "acceptance_runs": 4,
+        "acceptance_passed": 4,
+        "acceptance_pass_rate": 1.0,
+        "reviewers": {
+          "evaluator": 4
+        },
+        "llm_latency_ms": {
+          "check_publication": {
+            "n": 4,
+            "p50": 6265,
+            "p95": 8269,
+            "max": 8269
+          },
+          "draft_publication": {
+            "n": 4,
+            "p50": 4788,
+            "p95": 6254,
+            "max": 6254
+          },
+          "investigate": {
+            "n": 9,
+            "p50": 2017,
+            "p95": 8273,
+            "max": 8273
+          },
+          "plan": {
+            "n": 4,
+            "p50": 6258,
+            "p95": 10037,
+            "max": 10037
+          },
+          "plan_searches": {
+            "n": 4,
+            "p50": 2050,
+            "p95": 3572,
+            "max": 3572
+          },
+          "propose": {
+            "n": 12,
+            "p50": 3173,
+            "p95": 4745,
+            "max": 4745
+          },
+          "summary": {
+            "n": 4,
+            "p50": 3008,
+            "p95": 4719,
+            "max": 4719
+          }
+        },
+        "tool_duration_ms": {
+          "apply_patch": {
+            "n": 6,
+            "p50": 1,
+            "p95": 4,
+            "max": 4
+          },
+          "commit_changes": {
+            "n": 4,
+            "p50": 78,
+            "p95": 93,
+            "max": 93
+          },
+          "create_branch": {
+            "n": 4,
+            "p50": 59,
+            "p95": 110,
+            "max": 110
+          },
+          "create_pull_request": {
+            "n": 4,
+            "p50": 29,
+            "p95": 31,
+            "max": 31
+          },
+          "get_git_diff": {
+            "n": 4,
+            "p50": 103,
+            "p95": 646,
+            "max": 646
+          },
+          "get_github_issue": {
+            "n": 4,
+            "p50": 4,
+            "p95": 12,
+            "max": 12
+          },
+          "propose_patch": {
+            "n": 12,
+            "p50": 3,
+            "p95": 25,
+            "max": 25
+          },
+          "push_branch": {
+            "n": 4,
+            "p50": 90,
+            "p95": 100,
+            "max": 100
+          },
+          "read_repository_file": {
+            "n": 18,
+            "p50": 3,
+            "p95": 24,
+            "max": 24
+          },
+          "run_tests": {
+            "n": 4,
+            "p50": 4668,
+            "p95": 6131,
+            "max": 6131
+          },
+          "search_repository": {
+            "n": 21,
+            "p50": 2,
+            "p95": 17,
+            "max": 25
+          }
+        },
+        "step_duration_ms": {
+          "apply": {
+            "n": 4,
+            "p50": 113,
+            "p95": 682,
+            "max": 682
+          },
+          "draft_publication": {
+            "n": 4,
+            "p50": 10936,
+            "p95": 14534,
+            "max": 14534
+          },
+          "fetch_issue": {
+            "n": 4,
+            "p50": 5,
+            "p95": 12,
+            "max": 12
+          },
+          "finalize": {
+            "n": 4,
+            "p50": 3011,
+            "p95": 4723,
+            "max": 4723
+          },
+          "investigate": {
+            "n": 4,
+            "p50": 8910,
+            "p95": 10035,
+            "max": 10035
+          },
+          "plan": {
+            "n": 4,
+            "p50": 8520,
+            "p95": 13641,
+            "max": 13641
+          },
+          "propose": {
+            "n": 4,
+            "p50": 8463,
+            "p95": 10041,
+            "max": 10041
+          },
+          "publish": {
+            "n": 4,
+            "p50": 256,
+            "p95": 314,
+            "max": 314
+          },
+          "run_tests": {
+            "n": 4,
+            "p50": 4669,
+            "p95": 6140,
+            "max": 6140
+          }
+        }
+      }
+    },
+    "by_setup": {
+      "claude-sonnet-5-5": {
+        "runs": 4,
+        "finished": 4,
+        "unfinished": 0,
+        "status_counts": {
+          "published": 4
+        },
+        "resolved": 4,
+        "resolution_rate": 1.0,
+        "published_rate": 1.0,
+        "first_attempt_pass_rate": 1.0,
+        "test_run_pass_rate": 1.0,
+        "recovery_rate": null,
+        "runs_with_test_failure": 0,
+        "mean_tool_calls": 21.25,
+        "mean_tool_calls_by_model": 6.25,
+        "mean_tool_calls_rejected": 0.0,
+        "mean_tool_retries": 0.0,
+        "mean_llm_calls": 10.25,
+        "mean_input_tokens": 9191.0,
+        "mean_output_tokens": 5297.0,
+        "mean_wall_seconds": 54.719,
+        "median_wall_seconds": 53.003,
+        "mean_agent_seconds": 48.8185,
+        "mean_human_wait_seconds": 3.31575,
+        "files_edited": 6,
+        "unplanned_edits": 0,
+        "unplanned_edit_rate": 0.0,
+        "reverted_edits": 0,
+        "reverted_edit_rate": 0.0,
+        "total_cost_usd": 0.4459178,
+        "mean_cost_per_run_usd": 0.11147945,
+        "cost_per_resolved_task_usd": 0.11147945,
+        "cache_hit_rate": 0.41811229027094327,
+        "cost_by_step": {
+          "propose": {
+            "calls": 12,
+            "cost_usd": 0.1391348,
+            "share": 0.31201894160762367
+          },
+          "investigate": {
+            "calls": 9,
+            "cost_usd": 0.117041,
+            "share": 0.26247214172656935
+          },
+          "check_publication": {
+            "calls": 4,
+            "cost_usd": 0.0696,
+            "share": 0.1560825784483149
+          },
+          "plan": {
+            "calls": 4,
+            "cost_usd": 0.05372999999999999,
+            "share": 0.12049305948316034
+          },
+          "draft_publication": {
+            "calls": 4,
+            "cost_usd": 0.035714,
+            "share": 0.08009099434918275
+          },
+          "summary": {
+            "calls": 4,
+            "cost_usd": 0.022272,
+            "share": 0.04994642510346078
+          },
+          "plan_searches": {
+            "calls": 4,
+            "cost_usd": 0.008426,
+            "share": 0.01889585928168824
+          }
+        },
+        "summary_checks": 4,
+        "summary_checks_corrected": 1,
+        "acceptance_runs": 4,
+        "acceptance_passed": 4,
+        "acceptance_pass_rate": 1.0,
+        "reviewers": {
+          "evaluator": 4
+        },
+        "llm_latency_ms": {
+          "check_publication": {
+            "n": 4,
+            "p50": 6265,
+            "p95": 8269,
+            "max": 8269
+          },
+          "draft_publication": {
+            "n": 4,
+            "p50": 4788,
+            "p95": 6254,
+            "max": 6254
+          },
+          "investigate": {
+            "n": 9,
+            "p50": 2017,
+            "p95": 8273,
+            "max": 8273
+          },
+          "plan": {
+            "n": 4,
+            "p50": 6258,
+            "p95": 10037,
+            "max": 10037
+          },
+          "plan_searches": {
+            "n": 4,
+            "p50": 2050,
+            "p95": 3572,
+            "max": 3572
+          },
+          "propose": {
+            "n": 12,
+            "p50": 3173,
+            "p95": 4745,
+            "max": 4745
+          },
+          "summary": {
+            "n": 4,
+            "p50": 3008,
+            "p95": 4719,
+            "max": 4719
+          }
+        },
+        "tool_duration_ms": {
+          "apply_patch": {
+            "n": 6,
+            "p50": 1,
+            "p95": 4,
+            "max": 4
+          },
+          "commit_changes": {
+            "n": 4,
+            "p50": 78,
+            "p95": 93,
+            "max": 93
+          },
+          "create_branch": {
+            "n": 4,
+            "p50": 59,
+            "p95": 110,
+            "max": 110
+          },
+          "create_pull_request": {
+            "n": 4,
+            "p50": 29,
+            "p95": 31,
+            "max": 31
+          },
+          "get_git_diff": {
+            "n": 4,
+            "p50": 103,
+            "p95": 646,
+            "max": 646
+          },
+          "get_github_issue": {
+            "n": 4,
+            "p50": 4,
+            "p95": 12,
+            "max": 12
+          },
+          "propose_patch": {
+            "n": 12,
+            "p50": 3,
+            "p95": 25,
+            "max": 25
+          },
+          "push_branch": {
+            "n": 4,
+            "p50": 90,
+            "p95": 100,
+            "max": 100
+          },
+          "read_repository_file": {
+            "n": 18,
+            "p50": 3,
+            "p95": 24,
+            "max": 24
+          },
+          "run_tests": {
+            "n": 4,
+            "p50": 4668,
+            "p95": 6131,
+            "max": 6131
+          },
+          "search_repository": {
+            "n": 21,
+            "p50": 2,
+            "p95": 17,
+            "max": 25
+          }
+        },
+        "step_duration_ms": {
+          "apply": {
+            "n": 4,
+            "p50": 113,
+            "p95": 682,
+            "max": 682
+          },
+          "draft_publication": {
+            "n": 4,
+            "p50": 10936,
+            "p95": 14534,
+            "max": 14534
+          },
+          "fetch_issue": {
+            "n": 4,
+            "p50": 5,
+            "p95": 12,
+            "max": 12
+          },
+          "finalize": {
+            "n": 4,
+            "p50": 3011,
+            "p95": 4723,
+            "max": 4723
+          },
+          "investigate": {
+            "n": 4,
+            "p50": 8910,
+            "p95": 10035,
+            "max": 10035
+          },
+          "plan": {
+            "n": 4,
+            "p50": 8520,
+            "p95": 13641,
+            "max": 13641
+          },
+          "propose": {
+            "n": 4,
+            "p50": 8463,
+            "p95": 10041,
+            "max": 10041
+          },
+          "publish": {
+            "n": 4,
+            "p50": 256,
+            "p95": 314,
+            "max": 314
+          },
+          "run_tests": {
+            "n": 4,
+            "p50": 4669,
+            "p95": 6140,
+            "max": 6140
+          }
+        }
+      }
+    }
+  },
+  "runs": [
+    {
+      "run_id": "20261117-211917-56fdf6",
+      "issue": 42,
+      "model": "claude-sonnet-5-5",
+      "setup": "claude-sonnet-5-5",
+      "status": "published",
+      "finished": true,
+      "failure_code": null,
+      "started_at": "2026-11-17T21:19:17.097+00:00",
+      "resolved": true,
+      "published": true,
+      "test_runs": 1,
+      "test_runs_passed": 1,
+      "first_test_run_passed": true,
+      "had_test_failure": false,
+      "recovered": false,
+      "fix_attempts": 0,
+      "tool_calls": 22,
+      "tool_calls_by_model": 6,
+      "tool_calls_by_workflow": 16,
+      "tool_retries": 0,
+      "tool_calls_rejected": 0,
+      "llm_calls": 10,
+      "llm_calls_failed": 0,
+      "input_tokens": 10183,
+      "output_tokens": 5123,
+      "cache_read_tokens": 17018,
+      "cache_write_tokens": 15863,
+      "calls_by_step": {
+        "check_publication": 1,
+        "draft_publication": 1,
+        "investigate": 2,
+        "plan": 1,
+        "plan_searches": 1,
+        "propose": 3,
+        "summary": 1
+      },
+      "cost_by_step": {
+        "check_publication": 0.016208,
+        "draft_publication": 0.008296,
+        "investigate": 0.0290438,
+        "plan": 0.01762,
+        "plan_searches": 0.00243,
+        "propose": 0.0348935,
+        "summary": 0.004464
+      },
+      "summary_check": "ok",
+      "reviewer": "evaluator",
+      "acceptance": "PASSED",
+      "cost_usd": 0.1129553,
+      "wall_seconds": 56.744,
+      "agent_seconds": 49.524,
+      "human_wait_seconds": 4.473,
+      "files_edited": [
+        "src/sessions.js",
+        "test/sessions.test.js"
+      ],
+      "files_planned": [
+        "src/sessions.js",
+        "test/sessions.test.js"
+      ],
+      "unplanned_edits": [],
+      "reverted_edits": [],
+      "llm_latency_ms": [
+        [
+          "plan_searches",
+          3572
+        ],
+        [
+          "plan",
+          10037
+        ],
+        [
+          "investigate",
+          1009
+        ],
+        [
+          "investigate",
+          6250
+        ],
+        [
+          "propose",
+          1198
+        ],
+        [
+          "propose",
+          3631
+        ],
+        [
+          "propose",
+          3551
+        ],
+        [
+          "draft_publication",
+          4457
+        ],
+        [
+          "check_publication",
+          6265
+        ],
+        [
+          "summary",
+          2684
+        ]
+      ],
+      "tool_duration_ms": [
+        [
+          "get_github_issue",
+          4
+        ],
+        [
+          "search_repository",
+          10
+        ],
+        [
+          "search_repository",
+          2
+        ],
+        [
+          "search_repository",
+          2
+        ],
+        [
+          "search_repository",
+          1
+        ],
+        [
+          "search_repository",
+          1
+        ],
+        [
+          "read_repository_file",
+          24
+        ],
+        [
+          "read_repository_file",
+          2
+        ],
+        [
+          "read_repository_file",
+          24
+        ],
+        [
+          "read_repository_file",
+          2
+        ],
+        [
+          "propose_patch",
+          25
+        ],
+        [
+          "propose_patch",
+          2
+        ],
+        [
+          "propose_patch",
+          9
+        ],
+        [
+          "propose_patch",
+          2
+        ],
+        [
+          "apply_patch",
+          1
+        ],
+        [
+          "apply_patch",
+          1
+        ],
+        [
+          "get_git_diff",
+          213
+        ],
+        [
+          "run_tests",
+          6131
+        ],
+        [
+          "create_branch",
+          110
+        ],
+        [
+          "commit_changes",
+          78
+        ],
+        [
+          "push_branch",
+          91
+        ],
+        [
+          "create_pull_request",
+          31
+        ]
+      ],
+      "step_duration_ms": [
+        [
+          "fetch_issue",
+          5
+        ],
+        [
+          "plan",
+          13641
+        ],
+        [
+          "investigate",
+          7302
+        ],
+        [
+          "propose",
+          8463
+        ],
+        [
+          "apply",
+          231
+        ],
+        [
+          "run_tests",
+          6140
+        ],
+        [
+          "draft_publication",
+          10741
+        ],
+        [
+          "publish",
+          314
+        ],
+        [
+          "finalize",
+          2687
+        ]
+      ]
+    },
+    {
+      "run_id": "20261117-212014-bce58c",
+      "issue": 43,
+      "model": "claude-sonnet-5-5",
+      "setup": "claude-sonnet-5-5",
+      "status": "published",
+      "finished": true,
+      "failure_code": null,
+      "started_at": "2026-11-17T21:20:14.561+00:00",
+      "resolved": true,
+      "published": true,
+      "test_runs": 1,
+      "test_runs_passed": 1,
+      "first_test_run_passed": true,
+      "had_test_failure": false,
+      "recovered": false,
+      "fix_attempts": 0,
+      "tool_calls": 21,
+      "tool_calls_by_model": 7,
+      "tool_calls_by_workflow": 14,
+      "tool_retries": 0,
+      "tool_calls_rejected": 0,
+      "llm_calls": 11,
+      "llm_calls_failed": 0,
+      "input_tokens": 8255,
+      "output_tokens": 5157,
+      "cache_read_tokens": 21736,
+      "cache_write_tokens": 14511,
+      "calls_by_step": {
+        "check_publication": 1,
+        "draft_publication": 1,
+        "investigate": 3,
+        "plan": 1,
+        "plan_searches": 1,
+        "propose": 3,
+        "summary": 1
+      },
+      "cost_by_step": {
+        "check_publication": 0.017618,
+        "draft_publication": 0.009628,
+        "investigate": 0.0300578,
+        "plan": 0.01147,
+        "plan_searches": 0.001672,
+        "propose": 0.0294853,
+        "summary": 0.0066
+      },
+      "summary_check": "corrected",
+      "reviewer": "evaluator",
+      "acceptance": "PASSED",
+      "cost_usd": 0.10653109999999999,
+      "wall_seconds": 53.003,
+      "agent_seconds": 47.638,
+      "human_wait_seconds": 2.968,
+      "files_edited": [
+        "test/sessions.test.js"
+      ],
+      "files_planned": [
+        "src/sessions.js",
+        "test/sessions.test.js"
+      ],
+      "unplanned_edits": [],
+      "reverted_edits": [],
+      "llm_latency_ms": [
+        [
+          "plan_searches",
+          2219
+        ],
+        [
+          "plan",
+          6258
+        ],
+        [
+          "investigate",
+          1389
+        ],
+        [
+          "investigate",
+          1329
+        ],
+        [
+          "investigate",
+          6301
+        ],
+        [
+          "propose",
+          1381
+        ],
+        [
+          "propose",
+          2614
+        ],
+        [
+          "propose",
+          3639
+        ],
+        [
+          "draft_publication",
+          6254
+        ],
+        [
+          "check_publication",
+          8269
+        ],
+        [
+          "summary",
+          4719
+        ]
+      ],
+      "tool_duration_ms": [
+        [
+          "get_github_issue",
+          4
+        ],
+        [
+          "search_repository",
+          17
+        ],
+        [
+          "search_repository",
+          3
+        ],
+        [
+          "search_repository",
+          2
+        ],
+        [
+          "search_repository",
+          2
+        ],
+        [
+          "search_repository",
+          1
+        ],
+        [
+          "read_repository_file",
+          13
+        ],
+        [
+          "read_repository_file",
+          2
+        ],
+        [
+          "search_repository",
+          9
+        ],
+        [
+          "read_repository_file",
+          4
+        ],
+        [
+          "read_repository_file",
+          13
+        ],
+        [
+          "read_repository_file",
+          1
+        ],
+        [
+          "propose_patch",
+          12
+        ],
+        [
+          "propose_patch",
+          25
+        ],
+        [
+          "apply_patch",
+          4
+        ],
+        [
+          "get_git_diff",
+          646
+        ],
+        [
+          "run_tests",
+          2153
+        ],
+        [
+          "create_branch",
+          59
+        ],
+        [
+          "commit_changes",
+          78
+        ],
+        [
+          "push_branch",
+          85
+        ],
+        [
+          "create_pull_request",
+          29
+        ]
+      ],
+      "step_duration_ms": [
+        [
+          "fetch_issue",
+          5
+        ],
+        [
+          "plan",
+          8520
+        ],
+        [
+          "investigate",
+          9082
+        ],
+        [
+          "propose",
+          7679
+        ],
+        [
+          "apply",
+          682
+        ],
+        [
+          "run_tests",
+          2157
+        ],
+        [
+          "draft_publication",
+          14534
+        ],
+        [
+          "publish",
+          256
+        ],
+        [
+          "finalize",
+          4723
+        ]
+      ]
+    },
+    {
+      "run_id": "20261117-212108-ebcaee",
+      "issue": 42,
+      "model": "claude-sonnet-5-5",
+      "setup": "claude-sonnet-5-5",
+      "status": "published",
+      "finished": true,
+      "failure_code": null,
+      "started_at": "2026-11-17T21:21:08.135+00:00",
+      "resolved": true,
+      "published": true,
+      "test_runs": 1,
+      "test_runs_passed": 1,
+      "first_test_run_passed": true,
+      "had_test_failure": false,
+      "recovered": false,
+      "fix_attempts": 0,
+      "tool_calls": 23,
+      "tool_calls_by_model": 7,
+      "tool_calls_by_workflow": 16,
+      "tool_retries": 0,
+      "tool_calls_rejected": 0,
+      "llm_calls": 10,
+      "llm_calls_failed": 0,
+      "input_tokens": 10766,
+      "output_tokens": 5827,
+      "cache_read_tokens": 17510,
+      "cache_write_tokens": 16999,
+      "calls_by_step": {
+        "check_publication": 1,
+        "draft_publication": 1,
+        "investigate": 2,
+        "plan": 1,
+        "plan_searches": 1,
+        "propose": 3,
+        "summary": 1
+      },
+      "cost_by_step": {
+        "check_publication": 0.019162,
+        "draft_publication": 0.009324,
+        "investigate": 0.031711,
+        "plan": 0.015586,
+        "plan_searches": 0.002562,
+        "propose": 0.0390555,
+        "summary": 0.00665
+      },
+      "summary_check": "ok",
+      "reviewer": "evaluator",
+      "acceptance": "PASSED",
+      "cost_usd": 0.1240505,
+      "wall_seconds": 56.541,
+      "agent_seconds": 51.011,
+      "human_wait_seconds": 2.959,
+      "files_edited": [
+        "src/main/java/authkit/SessionStore.java",
+        "src/test/java/authkit/SessionStoreTest.java"
+      ],
+      "files_planned": [
+        "src/main/java/authkit/SessionStore.java",
+        "src/test/java/authkit/SessionStoreTest.java"
+      ],
+      "unplanned_edits": [],
+      "reverted_edits": [],
+      "llm_latency_ms": [
+        [
+          "plan_searches",
+          1565
+        ],
+        [
+          "plan",
+          8272
+        ],
+        [
+          "investigate",
+          2017
+        ],
+        [
+          "investigate",
+          6862
+        ],
+        [
+          "propose",
+          1132
+        ],
+        [
+          "propose",
+          4534
+        ],
+        [
+          "propose",
+          3173
+        ],
+        [
+          "draft_publication",
+          4839
+        ],
+        [
+          "check_publication",
+          7999
+        ],
+        [
+          "summary",
+          4381
+        ]
+      ],
+      "tool_duration_ms": [
+        [
+          "get_github_issue",
+          12
+        ],
+        [
+          "search_repository",
+          25
+        ],
+        [
+          "search_repository",
+          2
+        ],
+        [
+          "search_repository",
+          2
+        ],
+        [
+          "search_repository",
+          2
+        ],
+        [
+          "search_repository",
+          1
+        ],
+        [
+          "read_repository_file",
+          17
+        ],
+        [
+          "read_repository_file",
+          1
+        ],
+        [
+          "read_repository_file",
+          1
+        ],
+        [
+          "read_repository_file",
+          11
+        ],
+        [
+          "read_repository_file",
+          2
+        ],
+        [
+          "propose_patch",
+          12
+        ],
+        [
+          "propose_patch",
+          3
+        ],
+        [
+          "propose_patch",
+          3
+        ],
+        [
+          "propose_patch",
+          1
+        ],
+        [
+          "apply_patch",
+          1
+        ],
+        [
+          "apply_patch",
+          1
+        ],
+        [
+          "get_git_diff",
+          56
+        ],
+        [
+          "run_tests",
+          5698
+        ],
+        [
+          "create_branch",
+          85
+        ],
+        [
+          "commit_changes",
+          93
+        ],
+        [
+          "push_branch",
+          100
+        ],
+        [
+          "create_pull_request",
+          30
+        ]
+      ],
+      "step_duration_ms": [
+        [
+          "fetch_issue",
+          12
+        ],
+        [
+          "plan",
+          9885
+        ],
+        [
+          "investigate",
+          8910
+        ],
+        [
+          "propose",
+          8889
+        ],
+        [
+          "apply",
+          67
+        ],
+        [
+          "run_tests",
+          5701
+        ],
+        [
+          "draft_publication",
+          12850
+        ],
+        [
+          "publish",
+          313
+        ],
+        [
+          "finalize",
+          4384
+        ]
+      ]
+    },
+    {
+      "run_id": "20261117-212209-8fd07c",
+      "issue": 43,
+      "model": "claude-sonnet-5-5",
+      "setup": "claude-sonnet-5-5",
+      "status": "published",
+      "finished": true,
+      "failure_code": null,
+      "started_at": "2026-11-17T21:22:09.631+00:00",
+      "resolved": true,
+      "published": true,
+      "test_runs": 1,
+      "test_runs_passed": 1,
+      "first_test_run_passed": true,
+      "had_test_failure": false,
+      "recovered": false,
+      "fix_attempts": 0,
+      "tool_calls": 19,
+      "tool_calls_by_model": 5,
+      "tool_calls_by_workflow": 14,
+      "tool_retries": 0,
+      "tool_calls_rejected": 0,
+      "llm_calls": 10,
+      "llm_calls_failed": 0,
+      "input_tokens": 7560,
+      "output_tokens": 5081,
+      "cache_read_tokens": 14259,
+      "cache_write_tokens": 14010,
+      "calls_by_step": {
+        "check_publication": 1,
+        "draft_publication": 1,
+        "investigate": 2,
+        "plan": 1,
+        "plan_searches": 1,
+        "propose": 3,
+        "summary": 1
+      },
+      "cost_by_step": {
+        "check_publication": 0.016612,
+        "draft_publication": 0.008466,
+        "investigate": 0.026228400000000002,
+        "plan": 0.009054,
+        "plan_searches": 0.001762,
+        "propose": 0.0357005,
+        "summary": 0.004558
+      },
+      "summary_check": "ok",
+      "reviewer": "evaluator",
+      "acceptance": "PASSED",
+      "cost_usd": 0.10238090000000001,
+      "wall_seconds": 52.588,
+      "agent_seconds": 47.101,
+      "human_wait_seconds": 2.863,
+      "files_edited": [
+        "src/test/java/authkit/SessionStoreTest.java"
+      ],
+      "files_planned": [
+        "src/main/java/authkit/SessionStore.java",
+        "src/test/java/authkit/SessionStoreTest.java"
+      ],
+      "unplanned_edits": [],
+      "reverted_edits": [],
+      "llm_latency_ms": [
+        [
+          "plan_searches",
+          2050
+        ],
+        [
+          "plan",
+          5944
+        ],
+        [
+          "investigate",
+          1730
+        ],
+        [
+          "investigate",
+          8273
+        ],
+        [
+          "propose",
+          1480
+        ],
+        [
+          "propose",
+          4745
+        ],
+        [
+          "propose",
+          3752
+        ],
+        [
+          "draft_publication",
+          4788
+        ],
+        [
+          "check_publication",
+          6139
+        ],
+        [
+          "summary",
+          3008
+        ]
+      ],
+      "tool_duration_ms": [
+        [
+          "get_github_issue",
+          8
+        ],
+        [
+          "search_repository",
+          13
+        ],
+        [
+          "search_repository",
+          3
+        ],
+        [
+          "search_repository",
+          3
+        ],
+        [
+          "search_repository",
+          3
+        ],
+        [
+          "search_repository",
+          3
+        ],
+        [
+          "read_repository_file",
+          15
+        ],
+        [
+          "read_repository_file",
+          3
+        ],
+        [
+          "read_repository_file",
+          16
+        ],
+        [
+          "read_repository_file",
+          2
+        ],
+        [
+          "propose_patch",
+          12
+        ],
+        [
+          "propose_patch",
+          3
+        ],
+        [
+          "apply_patch",
+          1
+        ],
+        [
+          "get_git_diff",
+          103
+        ],
+        [
+          "run_tests",
+          4668
+        ],
+        [
+          "create_branch",
+          57
+        ],
+        [
+          "commit_changes",
+          74
+        ],
+        [
+          "push_branch",
+          90
+        ],
+        [
+          "create_pull_request",
+          29
+        ]
+      ],
+      "step_duration_ms": [
+        [
+          "fetch_issue",
+          8
+        ],
+        [
+          "plan",
+          8033
+        ],
+        [
+          "investigate",
+          10035
+        ],
+        [
+          "propose",
+          10041
+        ],
+        [
+          "apply",
+          113
+        ],
+        [
+          "run_tests",
+          4669
+        ],
+        [
+          "draft_publication",
+          10936
+        ],
+        [
+          "publish",
+          255
+        ],
+        [
+          "finalize",
+          3011
+        ]
+      ]
+    }
+  ]
+}

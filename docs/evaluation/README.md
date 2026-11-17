@@ -22,3 +22,10 @@ What they mean, how they were produced and their limits are in
 | [results-2026-11-17-benchmark-issue-43.md](results-2026-11-17-benchmark-issue-43.md) | the 6 runs of #43 |
 | [summary-check-replay-2026-11-17.md](summary-check-replay-2026-11-17.md) | the summary check (with the plan) replayed once on 3 recorded #43 drafts, by `scripts/replay_summary_check.py` |
 | [summary-check-replay-2026-11-17-tightened.md](summary-check-replay-2026-11-17-tightened.md) | the tightened check replayed 3 times on each of the same drafts |
+
+## 2026-11-17: JavaScript and Java, and Haiku 5.5 for investigation
+
+| File | Runs |
+|---|---|
+| [results-2026-11-17-javascript-java.md](results-2026-11-17-javascript-java.md) and [results-2026-11-17-javascript-java.json](results-2026-11-17-javascript-java.json) | `claude-sonnet-5-5` on the JavaScript and Java tasks, once each |
+| [results-2026-11-17-haiku-investigate.md](results-2026-11-17-haiku-investigate.md) and [results-2026-11-17-haiku-investigate.json](results-2026-11-17-haiku-investigate.json) | 6 runs with Haiku 5.5 for investigation, next to the 6 Sonnet 5.5 runs from the earlier benchmark |

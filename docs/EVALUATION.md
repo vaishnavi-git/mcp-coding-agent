@@ -10,6 +10,9 @@ sandbox and fixture-mode GitHub (nothing went to github.com):
   3 runs of each issue per model, with the automatic reviewer and hidden acceptance tests. All 12
   passed the acceptance tests. Sonnet 5.5 cost **$0.1007 per run against $0.1507** and took about
   half the time.
+- **2026-11-17, later:** the first live runs of the [JavaScript and Java tasks](#javascript-and-java-2026-11-17)
+  (4 runs, all passed), and [Haiku 5.5 for the investigate step](#haiku-55-for-investigation-2026-11-17)
+  (6 runs, all passed, **$0.0752 per run**, 25% less than Sonnet 5.5 throughout).
 
 The details are under [Results](#results); the generated reports are in
 [evaluation/](evaluation/README.md).
@@ -359,3 +362,50 @@ and time, not small ones, and says nothing about harder tasks or the other langu
 were not interleaved, so a change in the API's behavior between the two batches would show up as
 a model difference. The reviewer was automatic, so these runs say nothing about how either model
 responds to a person's feedback.
+
+### JavaScript and Java, 2026-11-17
+
+The first live runs outside Python: each of `javascript-42`, `javascript-43`, `java-42` and
+`java-43` once, with `claude-sonnet-5-5` and the benchmark reviewer. Report:
+[results-2026-11-17-javascript-java.md](evaluation/results-2026-11-17-javascript-java.md)
+([JSON](evaluation/results-2026-11-17-javascript-java.json)).
+
+| Task | Cost | Hidden acceptance tests |
+|---|---|---|
+| `javascript-42` | $0.1130 | passed (3 of 3) |
+| `javascript-43` | $0.1065 | passed (3 of 3) |
+| `java-42` | $0.1240 | passed (3 of 3) |
+| `java-43` | $0.1024 | passed (3 of 3) |
+
+All four passed their own tests on the first attempt. Every plan named files that exist, and
+nothing was edited outside the plan. As in Python, the #42 runs changed the session store and its
+test, and the #43 runs only added a test. No tool call tried to read `.env` or a key. The summary
+check corrected one draft, removing a risk the passing tests had already ruled out. One run per
+task shows the language support works end to end with a real model, not how reliably.
+
+### Haiku 5.5 for investigation, 2026-11-17
+
+Investigation was the largest share of the cost in every earlier run, so the next question was
+whether a much cheaper model can do it. Same tasks and number of runs as the Sonnet 5.5 half of
+the benchmark above (`python-42` and `python-43`, 3 runs each), with
+`--step-model investigate=claude-haiku-5-5` and Sonnet 5.5 for every other step. Report, with the
+Sonnet 5.5 runs from the earlier benchmark as the comparison:
+[results-2026-11-17-haiku-investigate.md](evaluation/results-2026-11-17-haiku-investigate.md)
+([JSON](evaluation/results-2026-11-17-haiku-investigate.json)).
+
+| Metric | Sonnet 5.5 throughout (6) | Haiku 5.5 for investigation (6) |
+|---|---|---|
+| Hidden acceptance tests passed | 6 of 6 | 6 of 6 |
+| Unplanned file edits | 0 | 0 |
+| Mean tool calls per run | 21.7 | 20.8 |
+| Mean agent working time | 47.5 s | 45.0 s |
+| Investigation cost, all 6 runs | $0.1635 | $0.0091 |
+| Proposal cost, all 6 runs | $0.1929 | $0.1921 |
+| Mean cost per run | $0.1007 | $0.0752 |
+
+Haiku made investigation about 94% cheaper, and the proposal step that works from its findings
+cost the same, so it didn't leave Sonnet more to do. Accuracy held on these tasks. Two caveats:
+the comparison runs are from earlier the same day, before the summary check was changed to see
+the plan (its cost moved from $0.0861 to $0.0900 over 6 runs), and two small issues where the
+relevant code is easy to find are the easiest case for a smaller model. It's worth trying on
+harder tasks before making it the default.

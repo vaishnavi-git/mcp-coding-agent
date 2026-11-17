@@ -31,6 +31,10 @@
   version got all 9 replays right (three recorded drafts, three times each).
 - `scripts/replay_summary_check.py` runs the current summary check again on drafts from recorded
   runs, without running the agent.
+- `.env.example` now suggests `claude-sonnet-5-5`, after the benchmark showed it as accurate as
+  Sonnet 5 on the sample tasks, a third cheaper and twice as fast.
+- Results: the first live JavaScript and Java runs, and Haiku 5.5 for the investigate step
+  ([docs/EVALUATION.md](docs/EVALUATION.md#haiku-55-for-investigation-2026-11-17)).
 - Benchmark results for Claude Sonnet 5 against Sonnet 5.5 on the Python sample
   ([docs/evaluation/results-2026-11-17-benchmark.md](docs/evaluation/results-2026-11-17-benchmark.md)).
 - The long implementation plan is now split into [design notes](docs/DESIGN.md), this changelog

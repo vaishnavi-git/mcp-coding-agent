@@ -152,6 +152,10 @@ model made an unplanned edit now that the plan is written after searching the co
 [docs/EVALUATION.md](docs/EVALUATION.md#benchmark-of-2026-11-17-sonnet-5-and-sonnet-55) has the
 details and the limits.
 
+Since then, Sonnet 5.5 is the default in `.env.example`, the JavaScript and Java versions of both
+issues passed their hidden tests on the first live run, and using Haiku 5.5 just for the
+investigation step cut the cost to $0.075 a run with all 6 runs still passing.
+
 ## Screenshots
 
 The fix from a run of #42, with the run list on the left:
@@ -197,7 +201,7 @@ pytest -m path_traversal        # one test category
 pytest --cov=app
 ```
 
-There are 631 tests. With Docker running and the three sandbox images built they all pass; without
+There are 633 tests. With Docker running and the three sandbox images built they all pass; without
 Docker, the four tests that need it are skipped. CI builds all three images and runs the linter
 and the whole suite, Docker tests included, on every push
 ([.github/workflows/tests.yml](.github/workflows/tests.yml)).
@@ -225,7 +229,7 @@ Streamlit UI). [docs/TESTING.md](docs/TESTING.md) has the details.
   theoretical DNS-rebinding gap; the URL allowlist is the main control.
 - JavaScript means Node's built-in test runner (not Jest or Mocha) and Java means Maven (not
   Gradle). Since tests run offline, a project's dependencies have to be baked into its sandbox
-  image. The live experiment so far has only been run on the Python sample.
+  image. The JavaScript and Java tasks have only had one live run each so far.
 - Path checks see symlinks but not hard links.
 - The UI has no automated tests.
 

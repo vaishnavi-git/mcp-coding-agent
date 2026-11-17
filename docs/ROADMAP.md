@@ -109,6 +109,8 @@ cheaper and twice as fast. What it pointed at next:
   Replayed three times on each of three recorded drafts, it got all 9 right
   ([EVALUATION.md](EVALUATION.md#benchmark-of-2026-11-17-sonnet-5-and-sonnet-55)). The next
   benchmark should show how it does on drafts it hasn't been tuned on.
-- **Try Haiku 5.5 for investigation**, still the largest share of the cost with either model.
-- **Run the benchmark on the JavaScript and Java tasks**, and with more runs, before reading much
-  into small differences.
+- **Try Haiku 5.5 for investigation (done).** On the Python tasks it cut investigation cost by
+  about 94% and the total to $0.075 a run, with all 6 runs passing. Next is trying it on harder
+  tasks before making it the default.
+- **Run the benchmark on the JavaScript and Java tasks (done, once each).** All 4 passed. More
+  runs, and harder tasks than the sample, are what the benchmark needs next.
