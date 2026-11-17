@@ -20,3 +20,4 @@ What they mean, how they were produced and their limits are in
 | [results-2026-11-17-benchmark.md](results-2026-11-17-benchmark.md) and [results-2026-11-17-benchmark.json](results-2026-11-17-benchmark.json) | all 12 runs (3 per issue per model), with a column per model |
 | [results-2026-11-17-benchmark-issue-42.md](results-2026-11-17-benchmark-issue-42.md) | the 6 runs of #42 |
 | [results-2026-11-17-benchmark-issue-43.md](results-2026-11-17-benchmark-issue-43.md) | the 6 runs of #43 |
+| [summary-check-replay-2026-11-17.md](summary-check-replay-2026-11-17.md) | the summary check (with the plan) replayed on 3 recorded #43 drafts, by `scripts/replay_summary_check.py` |

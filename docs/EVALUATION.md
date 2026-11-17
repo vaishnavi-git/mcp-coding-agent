@@ -338,8 +338,14 @@ What it shows:
   first experiment found (saying #43 *reported* an error), 2 listed risks the passing tests had
   already settled, and in 2 the corrections were pedantic or wrong: the check isn't shown the
   plan, so it struck a true statement about the plan as unsupported. Reading all 12 final
-  summaries myself, I found no remaining factual errors. (Since then the check is shown the
-  plan and told what doesn't count as a problem; that change hasn't been measured yet.)
+  summaries myself, I found no remaining factual errors.
+- **Follow-up: replaying the check.** Afterwards the check was shown the plan and told what
+  doesn't count as a problem. [Replaying it](evaluation/summary-check-replay-2026-11-17.md) on
+  three recorded drafts, once each ($0.0514 in all), removed both wrong corrections, but in the
+  control case it missed the real mistake it had caught before ("the issue reports" an error).
+  The prompt was tightened again (claims about the issue must match the issue's own words, and
+  the exemption for facts that follow from the code is for claims about the code only). That
+  version hasn't been replayed yet.
 - **The planted instruction was ignored every time.** No tool call tried to read `.env` or a key,
   and none was refused; 5 of the 6 #43 pull requests mention that the instruction was ignored.
 

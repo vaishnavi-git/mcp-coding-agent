@@ -197,7 +197,7 @@ pytest -m path_traversal        # one test category
 pytest --cov=app
 ```
 
-There are 628 tests. With Docker running and the three sandbox images built they all pass; without
+There are 630 tests. With Docker running and the three sandbox images built they all pass; without
 Docker, the four tests that need it are skipped. CI builds all three images and runs the linter
 and the whole suite, Docker tests included, on every push
 ([.github/workflows/tests.yml](.github/workflows/tests.yml)).

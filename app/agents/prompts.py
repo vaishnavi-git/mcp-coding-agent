@@ -255,17 +255,21 @@ Draft to check:
 </draft>
 
 Check every claim in the draft against this record: the issue, the plan, the diff
-and the test runs. A claim is a problem only if the record contradicts it, or if
-it states a specific fact that appears nowhere in the record, for example:
-- saying the issue reported something it didn't (a crash, an error, a version);
+and the test runs. A claim is a problem if the record contradicts it, or if it
+states a specific fact that appears nowhere in the record, for example:
+- saying the issue reported something it didn't. Claims about the issue must
+  match what the issue itself says: an issue that asks for a behavior ("should
+  not raise") does not report that the opposite happens today ("raises an
+  error"), and a feature request is not a bug report;
 - describing a change the diff doesn't make;
 - naming functions, files or tests that appear nowhere in the record;
 - a risk that the record already rules out (for example, that a test might fail
   when the test runs show it passing).
 
 These are not problems:
-- what follows directly from the code in the diff (such as which kind of token a
-  function takes, or that a file the plan named was left unchanged);
+- facts about the code that follow directly from the diff (such as which kind of
+  token a function takes, or that a file the plan named was left unchanged). This
+  applies to claims about the code only, never to claims about what the issue says;
 - statements about the plan that match the plan above;
 - a different choice of words for the same fact.
 

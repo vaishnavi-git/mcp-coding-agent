@@ -103,10 +103,12 @@ The first comparison is done ([results](EVALUATION.md#benchmark-of-2026-11-17-so
 on the two Python issues both models passed every hidden test, and Sonnet 5.5 was a third
 cheaper and twice as fast. What it pointed at next:
 
-- **Give the summary check the plan (done).** In 2 of the 5 runs it corrected, its corrections
-  were pedantic or wrong, once because it couldn't see the plan and so treated a true statement
-  about the plan as unsupported. It now gets the approved plan and is told that facts following
-  directly from the code, and rewordings, aren't problems. Not re-measured yet.
+- **Give the summary check the plan (done, still being tuned).** In 2 of the 5 runs it
+  corrected, its corrections were pedantic or wrong, once because it couldn't see the plan. It
+  now gets the approved plan and is told what isn't a problem. A replay on three recorded drafts
+  showed both wrong corrections gone but the real mistake missed in the control case, so the
+  prompt was tightened again; that version still needs a replay, ideally a few times per case,
+  since one call each says little about a model that varies from run to run.
 - **Try Haiku 5.5 for investigation**, still the largest share of the cost with either model.
 - **Run the benchmark on the JavaScript and Java tasks**, and with more runs, before reading much
   into small differences.
