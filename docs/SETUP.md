@@ -141,7 +141,7 @@ All settings are environment variables, read from `.env` if present (see
 | Variable | Default | Meaning |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | (required) | Anthropic API key. Never logged; no MCP server receives it. |
-| `ANTHROPIC_MODEL` | `claude-sonnet-5` | Model for every call. |
+| `ANTHROPIC_MODEL` | `claude-sonnet-5-5` (in `.env.example`; nothing in code) | Model for every call. Sonnet 5.5 is the suggested default since the [2026-11-17 benchmark](EVALUATION.md#benchmark-of-2026-11-17-sonnet-5-and-sonnet-55): as accurate as Sonnet 5 there, a third cheaper and twice as fast. |
 | `ANTHROPIC_MAX_TOKENS` | `16000` | Maximum output tokens per call. |
 | `ANTHROPIC_EFFORT` | (unset) | `low`, `medium`, `high`, `xhigh` or `max`. |
 | `ANTHROPIC_THINKING` | `adaptive` | `adaptive` or `none`. |
