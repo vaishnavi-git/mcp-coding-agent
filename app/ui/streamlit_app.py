@@ -182,6 +182,13 @@ elif pending and pending.get("kind") == "publish_approval":
     st.caption(f"Push target: {pending['push_target']} · base branch: {pending['base']} · files: {', '.join(pending['files'])}")
     for action in pending["actions"]:
         st.markdown(f"- `{action['tool']}`: {action['description']}")
+    check = pending.get("summary_check") or {}
+    if check.get("status") == "corrected":
+        st.info("The summary check changed the drafted text:\n" + "\n".join(f"- **{p['field']}**: {p['claim']} → {p['correction']}" for p in check["problems"]))
+        with st.expander("The text before the check"):
+            st.json(check.get("original") or {})
+    elif check.get("status") == "failed":
+        st.warning(f"The summary check could not run, so this text is unchecked: {check.get('message')}")
     level_labels = {
         "branch": "Create the branch and commit (local only)",
         "push": "…and push the branch",

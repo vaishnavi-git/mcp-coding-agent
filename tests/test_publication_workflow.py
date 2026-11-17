@@ -171,3 +171,58 @@ def test_branch_names_and_pr_body_helpers() -> None:
     assert branch_name_for("agent/", 7, "") == "agent/issue-7-fix"
     body = compose_pr_body("S", [], [("a.py", 1, 2)], [], 5)
     assert "- No test runs recorded." in body and "- None identified." in body and "Fixes #5" in body
+
+
+# ---------------------------------------------------------------------- summary self-check
+
+WRONG = "Logging out twice crashed with a KeyError, as the issue reports."
+CHECKED = {
+    "problems": [{"field": "summary", "claim": "the issue reports a KeyError crash", "correction": "the issue reports that a second refresh fails and a used refresh token still works"}],
+    "pr_title": DEFAULT_PUBLICATION["pr_title"],
+    "commit_message": "Rotate refresh tokens on refresh",  # the issue reference was dropped; the workflow adds it back
+    "summary": "Refreshing never stored the new refresh token or revoked the used one; the fix does both.",
+    "risks": DEFAULT_PUBLICATION["risks"],
+}
+
+
+async def test_the_summary_check_corrects_the_draft_and_keeps_the_original(settings) -> None:
+    drafted = {**DEFAULT_PUBLICATION, "summary": WRONG}
+    scripted = provider(json_by_purpose={"draft_publication": [drafted], "check_publication": [CHECKED]})
+    _, _, view = await to_publication(settings, scripted)
+    pending = view["pending_approval"]
+    assert CHECKED["summary"] in pending["pr_body"] and WRONG not in pending["pr_body"]
+    assert pending["commit_message"].startswith("Rotate refresh tokens on refresh") and "#42" in pending["commit_message"]
+    check = pending["summary_check"]
+    assert check["status"] == "corrected" and check["problems"] == CHECKED["problems"]
+    assert check["original"]["summary"] == WRONG  # what the model first wrote stays on record
+    assert view["state"]["publication_draft"]["summary_check"] == check
+    prompt = next(p for purpose, p in scripted.prompts if purpose == "check_publication")
+    assert "Logout should be idempotent" not in prompt and "Refreshing a session twice" in prompt  # the issue
+    assert "+++ b/authkit/sessions.py" in prompt and "- attempt 0: PASSED (6 passed" in prompt  # the diff and the recorded tests
+    assert WRONG in prompt
+
+
+async def test_without_problems_the_draft_is_used_as_written(settings) -> None:
+    rewritten = {**CHECKED, "problems": []}  # different text but no problems: nothing to correct
+    _, _, view = await to_publication(settings, provider(json_by_purpose={"check_publication": [rewritten]}))
+    pending = view["pending_approval"]
+    assert DEFAULT_PUBLICATION["summary"] in pending["pr_body"] and CHECKED["summary"] not in pending["pr_body"]
+    assert pending["summary_check"] == {"status": "ok", "problems": []}
+
+
+async def test_a_failed_check_keeps_the_draft_and_says_so(settings) -> None:
+    scripted = provider()
+    scripted.errors["check_publication"] = LLMAPIError("Anthropic API error 400: bad request", status_code=400)
+    _, _, view = await to_publication(settings, scripted)
+    pending = view["pending_approval"]
+    assert DEFAULT_PUBLICATION["summary"] in pending["pr_body"]
+    assert pending["summary_check"]["status"] == "failed" and "400" in pending["summary_check"]["message"]
+
+
+async def test_the_check_can_be_turned_off(settings) -> None:
+    import dataclasses
+
+    scripted = provider()
+    _, _, view = await to_publication(dataclasses.replace(settings, check_pr_summary=False), scripted)
+    assert "check_publication" not in scripted.calls
+    assert view["pending_approval"]["summary_check"] is None

@@ -207,6 +207,7 @@ All settings are environment variables, read from `.env` if present (see
 | `RETRY_BASE_DELAY_SECONDS`, `RETRY_MAX_DELAY_SECONDS` | `1.0`, `30` | Exponential backoff bounds. |
 | `MAX_RUN_RETRIES` | `3` | Retries of a failed or interrupted run. |
 | `REQUIRE_PLAN_APPROVAL` | `false` | Add a checkpoint to approve the plan before investigation. |
+| `CHECK_PR_SUMMARY` | `true` | Fact-check the drafted pull request text against the issue, the diff and the test runs, and correct it (one extra model call per draft). |
 
 ### Storage, UI and Docker Compose
 

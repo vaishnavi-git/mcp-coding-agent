@@ -99,6 +99,7 @@ class Settings:
     retry_max_delay_seconds: float
     max_run_retries: int
     require_plan_approval: bool
+    check_pr_summary: bool  # a second model call fact-checks the drafted pull request text
     # Storage
     data_dir: Path
     # Project language: python, javascript or java (PROJECT_LANGUAGE, detected from REPO_PATH by default).
@@ -188,6 +189,7 @@ class Settings:
             retry_max_delay_seconds=float(e("RETRY_MAX_DELAY_SECONDS", "30")),
             max_run_retries=int(e("MAX_RUN_RETRIES", "3")),
             require_plan_approval=_bool(e("REQUIRE_PLAN_APPROVAL"), False),
+            check_pr_summary=_bool(e("CHECK_PR_SUMMARY"), True),
             data_dir=_path(e("DATA_DIR"), PROJECT_ROOT / "data"),
             project_language=language,
         )

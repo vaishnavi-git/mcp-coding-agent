@@ -94,6 +94,7 @@ PUBLISH_STEPS = {
     "pull_request": ("create_branch", "commit_changes", "push_branch", "create_pull_request"),
 }
 EDITABLE_PUBLICATION_FIELDS = ("branch_name", "commit_message", "pr_title", "pr_body")
+CHECKED_FIELDS = ("pr_title", "commit_message", "summary", "risks")  # what the self-check may correct
 
 
 class WorkflowError(CodedError):
@@ -621,6 +622,9 @@ def build_graph(deps: AgentDeps | None) -> StateGraph:
             issue_number=number,
         )
         draft = await asyncio.to_thread(deps_.provider.generate_json, prompts.PUBLISH_SYSTEM, user, prompts.PUBLISH_SCHEMA, purpose="draft_publication")
+        check: dict[str, Any] | None = None
+        if deps_.settings.check_pr_summary:
+            draft, check = await _check_publication(deps_, state, draft)
         title_line = (state.get("issue") or "").splitlines()[0].split(":", 1)[-1].strip() if state.get("issue") else ""
         pr_title = " ".join(str(draft.get("pr_title") or "").split())[:120] or f"Fix #{number}: {title_line}"[:120]
         commit_message = str(draft.get("commit_message") or "").strip() or pr_title
@@ -640,9 +644,41 @@ def build_graph(deps: AgentDeps | None) -> StateGraph:
                 "draft": settings.github_pr_draft,
                 "files": [p for p, _, _ in files],
                 "push_target": f"github.com/{settings.github_repository}" if settings.github_mode == "api" else "origin (local fixture remote)",
+                "summary_check": check,
             },
             "publication_feedback": "",
         }
+
+    async def _check_publication(deps_: AgentDeps, state: AgentState, draft: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+        """Fact-check the drafted text against the issue, the diff and the test runs.
+
+        Returns the draft to use and a record for the reviewer: what was wrong, and the original
+        text when something was corrected. If the check itself fails, the draft is used as it was.
+        """
+        original = {k: draft.get(k) for k in CHECKED_FIELDS}
+        tests = "\n".join(f"- attempt {r['attempt']}: {r['status']} ({r['summary']})" for r in state.get("test_runs", [])) or "(none)"
+        user = prompts.PUBLISH_CHECK_USER.format(
+            issue=state["issue"], diff=_clip(state.get("repo_diff") or "", 15000), tests=tests, draft=json.dumps(original, indent=2)
+        )
+        try:
+            checked = await asyncio.to_thread(deps_.provider.generate_json, prompts.PUBLISH_CHECK_SYSTEM, user, prompts.PUBLISH_CHECK_SCHEMA, purpose="check_publication")
+        except LLMError as exc:
+            return draft, {"status": "failed", "message": str(exc)[:500], "problems": []}
+        problems = [
+            {"field": str(p.get("field") or ""), "claim": str(p.get("claim") or "").strip(), "correction": str(p.get("correction") or "").strip()}
+            for p in checked.get("problems") or []
+            if isinstance(p, dict) and (p.get("claim") or p.get("correction"))
+        ][:20]
+        if not problems:
+            return draft, {"status": "ok", "problems": []}
+        corrected = dict(draft)
+        for key in CHECKED_FIELDS:
+            value = checked.get(key)
+            if key == "risks" and isinstance(value, list):
+                corrected[key] = [str(r) for r in value if str(r).strip()]
+            elif isinstance(value, str) and value.strip():
+                corrected[key] = value
+        return corrected, {"status": "corrected", "problems": problems, "original": original}
 
     async def await_publication(state: AgentState) -> dict[str, Any]:
         draft = state["publication_draft"]

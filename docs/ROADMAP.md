@@ -58,12 +58,14 @@ The investigate step gets the same results instead of searching again, so this c
 extra model call per run, not extra tool calls. Whether it actually removes the unplanned edits is
 something the next experiment has to show.
 
-## Check the pull request summary
+## Check the pull request summary (done)
 
-Half of the drafted summaries got a detail wrong. After drafting, a second model call will compare
-the summary with the facts (the issue, the final diff and the recorded test results), list what's
-wrong and return a corrected version. The reviewer sees the corrected text and the list of
-corrections, and the original stays in the run record.
+Half of the drafted summaries got a detail wrong. After drafting, a second model call now compares
+the text with the facts (the issue, the final diff and the recorded test results), lists what's
+wrong and returns a corrected version. The reviewer sees the corrected text and the list of
+corrections, and the original stays in the run record. It's on by default (`CHECK_PR_SUMMARY`) and
+costs one small call per draft; whether it catches the kind of mistake the experiment found is for
+the next experiment to show.
 
 ## A model and effort level per step
 
@@ -94,6 +96,6 @@ be mixed in.
 
 ## Tests for the rest
 
-- The summary check, per-step models and pricing.
+- Per-step models and pricing.
 - The benchmark harness: it refuses outside the samples, records evaluator decisions, and its
   acceptance tests pass on a right fix and fail on a wrong one.

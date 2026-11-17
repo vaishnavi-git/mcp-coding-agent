@@ -125,7 +125,7 @@ flowchart TD
 | `apply` | Every approved patch is checked against the current files, then applied; the diff is captured. | `propose_patch`, `apply_patch`, `get_git_diff` |
 | `run_tests` | The configured test command runs in Docker; the output is analyzed (failing tests, failure kind). | `run_tests` |
 | `await_recovery` | When the fix attempts run out or the tests cannot run: retry with guidance, or stop. | none |
-| `draft_publication` | The model drafts the branch name, commit message and PR text; changes and test results come from the record. | none |
+| `draft_publication` | The model drafts the branch name, commit message and PR text, then a second call fact-checks that text against the issue, the diff and the test runs and corrects it. Changes and test results come from the record. | none |
 | `await_publication` | A human chooses how far to publish (branch, push, pull request) and may edit the texts. | none |
 | `publish` | Branch, commit, push, pull request: only the approved steps, with the approved values. | GitHub write tools |
 | `finalize` | Record the outcome, the failure if any, and a summary. | none |

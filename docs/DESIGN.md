@@ -102,6 +102,13 @@ After the tests pass, the model drafts a branch name, commit message and pull re
 workflow then adds the *Changes* and *Tests* sections itself from what was recorded, so the pull
 request can't claim tests passed when they didn't.
 
+The rest of the text is still the model's, and in the first experiment half of the summaries got a
+detail wrong. So a second call checks the draft against the issue, the final diff and the test
+runs, lists anything they contradict or don't support, and returns corrected text. The reviewer
+sees the corrected version, what was changed, and the original. If the check finds nothing, the
+draft is used exactly as written, and if the check itself fails, the draft is used and marked as
+unchecked. `CHECK_PR_SUMMARY=false` turns it off.
+
 At the publication checkpoint the reviewer chooses how far to go:
 
 - `branch`: create the branch and commit, locally only;

@@ -11,6 +11,9 @@
 - The plan is written after the first code searches instead of before: the model picks the
   searches, the workflow runs them, and the plan (including the files it expects to change) is
   written with the results in view. Investigation reuses those results.
+- The drafted pull request text is fact-checked against the issue, the diff and the test runs
+  before the publication checkpoint. Corrections are shown to the reviewer, with the original
+  kept. `CHECK_PR_SUMMARY=false` turns it off.
 - The long implementation plan is now split into [design notes](docs/DESIGN.md), this changelog
   and a [roadmap](docs/ROADMAP.md). The README has been rewritten.
 - Comments and docstrings no longer refer to the stages the project was built in.

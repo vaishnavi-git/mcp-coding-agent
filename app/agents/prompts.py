@@ -224,6 +224,70 @@ PUBLISH_SCHEMA = {
     "additionalProperties": False,
 }
 
+PUBLISH_CHECK_SYSTEM = SYSTEM_BASE + """
+
+Task: fact-check the text drafted for a pull request against the record of what
+happened. You are checking, not editing for style: change only what is wrong or
+not supported by the record."""
+
+PUBLISH_CHECK_USER = """\
+GitHub issue:
+<issue>
+{issue}
+</issue>
+
+Final diff:
+<diff>
+{diff}
+</diff>
+
+Test runs in the Docker sandbox:
+{tests}
+
+Draft to check:
+<draft>
+{draft}
+</draft>
+
+Check every claim in the draft against the issue, the diff and the test runs. A
+claim is a problem if they contradict it or don't support it, for example:
+- saying the issue reported something it didn't (a crash, an error, a version);
+- describing a change the diff doesn't make, or code it doesn't touch;
+- naming functions, files or tests that appear in neither the diff nor the issue;
+- claiming test results (the workflow adds the real ones itself).
+
+Produce:
+- problems: one entry per problem, with the field (pr_title, commit_message,
+  summary or risks), the claim, and what the record shows instead. Empty if
+  nothing is wrong.
+- pr_title, commit_message, summary, risks: the text with those problems fixed.
+  Where nothing is wrong, return it unchanged."""
+
+PUBLISH_CHECK_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "problems": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "field": {"type": "string", "enum": ["pr_title", "commit_message", "summary", "risks"]},
+                    "claim": {"type": "string"},
+                    "correction": {"type": "string"},
+                },
+                "required": ["field", "claim", "correction"],
+                "additionalProperties": False,
+            },
+        },
+        "pr_title": {"type": "string"},
+        "commit_message": {"type": "string"},
+        "summary": {"type": "string"},
+        "risks": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": ["problems", "pr_title", "commit_message", "summary", "risks"],
+    "additionalProperties": False,
+}
+
 SUMMARY_SYSTEM = SYSTEM_BASE + "\n\nTask: write a short, factual report of what happened in this run."
 
 SUMMARY_USER = """\

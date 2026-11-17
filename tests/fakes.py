@@ -95,6 +95,8 @@ class ScriptedProvider(LLMProvider):
             return copy.deepcopy(queue.pop(0) if len(queue) > 1 else queue[0])
         if purpose == "draft_publication":
             return copy.deepcopy(DEFAULT_PUBLICATION)
+        if purpose == "check_publication":
+            return {"problems": [], **{k: copy.deepcopy(DEFAULT_PUBLICATION[k]) for k in ("pr_title", "commit_message", "summary", "risks")}}
         return copy.deepcopy(self.plan or {})
 
     def chat(self, system_prompt: str, messages: list[Message], tools: list[ToolDefinition], *, purpose: str = "chat") -> LLMResponse:

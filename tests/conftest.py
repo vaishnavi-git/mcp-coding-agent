@@ -123,6 +123,7 @@ def make_settings(repo: Path, data_dir: Path, **overrides) -> Settings:
         retry_max_delay_seconds=30.0,
         max_run_retries=3,
         require_plan_approval=False,
+        check_pr_summary=True,
         data_dir=data_dir,
     )
     return dataclasses.replace(base, **overrides)
