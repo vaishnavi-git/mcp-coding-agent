@@ -199,6 +199,9 @@ async def test_the_summary_check_corrects_the_draft_and_keeps_the_original(setti
     prompt = next(p for purpose, p in scripted.prompts if purpose == "check_publication")
     assert "Logout should be idempotent" not in prompt and "Refreshing a session twice" in prompt  # the issue
     assert "+++ b/authkit/sessions.py" in prompt and "- attempt 0: PASSED (6 passed" in prompt  # the diff and the recorded tests
+    plan_section = prompt.split("<plan>", 1)[1].split("</plan>", 1)[0]
+    assert PLAN["summary"] in plan_section and PLAN["steps"][0] in plan_section  # so statements about the plan can be checked
+    assert "search_queries" not in plan_section  # only what the reviewer approved, not how the agent searched
     assert WRONG in prompt
 
 

@@ -650,15 +650,20 @@ def build_graph(deps: AgentDeps | None) -> StateGraph:
         }
 
     async def _check_publication(deps_: AgentDeps, state: AgentState, draft: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-        """Fact-check the drafted text against the issue, the diff and the test runs.
+        """Fact-check the drafted text against the issue, the approved plan, the diff and the test runs.
 
         Returns the draft to use and a record for the reviewer: what was wrong, and the original
         text when something was corrected. If the check itself fails, the draft is used as it was.
         """
         original = {k: draft.get(k) for k in CHECKED_FIELDS}
         tests = "\n".join(f"- attempt {r['attempt']}: {r['status']} ({r['summary']})" for r in state.get("test_runs", [])) or "(none)"
+        plan = {k: v for k, v in (state.get("plan") or {}).items() if k in ("summary", "steps", "acceptance_criteria", "files_to_change")}
         user = prompts.PUBLISH_CHECK_USER.format(
-            issue=state["issue"], diff=_clip(state.get("repo_diff") or "", 15000), tests=tests, draft=json.dumps(original, indent=2)
+            issue=state["issue"],
+            plan=_clip(json.dumps(plan, indent=2), 4000) if plan else "(no plan recorded)",
+            diff=_clip(state.get("repo_diff") or "", 15000),
+            tests=tests,
+            draft=json.dumps(original, indent=2),
         )
         try:
             checked = await asyncio.to_thread(deps_.provider.generate_json, prompts.PUBLISH_CHECK_SYSTEM, user, prompts.PUBLISH_CHECK_SCHEMA, purpose="check_publication")

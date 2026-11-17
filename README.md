@@ -58,7 +58,7 @@ writes a plan from what they found, then reads the code and proposes patches. Th
 until you approve them. Approved patches are applied and the tests run in Docker.
 If they fail, the model sees which tests failed and tries again, up to a limit, after which you
 decide. When the tests pass it drafts the branch name, commit message and pull request, checks
-that text against the issue, the diff and the test results, and pauses again. The *Changes* and
+that text against the issue, the plan, the diff and the test results, and pauses again. The *Changes* and
 *Tests* sections of the PR come from what actually happened, not from the model.
 
 State is checkpointed after every step, so a run can wait for approval for hours, survive a

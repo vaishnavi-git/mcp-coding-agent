@@ -24,6 +24,9 @@
   refuses to run outside fixture mode and the bundled samples. `scripts/evaluate.py --batch`
   reports one benchmark, including the acceptance pass rate. `--batch` can be repeated, and with
   more than one setup the cost-by-step table has a column for each.
+- The summary check now sees the approved plan and is told what isn't a problem (facts that
+  follow from the code, rewordings). In the benchmark it had struck a true statement about the
+  plan because it couldn't see it.
 - Benchmark results for Claude Sonnet 5 against Sonnet 5.5 on the Python sample
   ([docs/evaluation/results-2026-11-17-benchmark.md](docs/evaluation/results-2026-11-17-benchmark.md)).
 - The long implementation plan is now split into [design notes](docs/DESIGN.md), this changelog

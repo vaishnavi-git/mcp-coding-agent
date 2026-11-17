@@ -92,9 +92,9 @@ versions, and Maven then runs offline against that cache.
 | Force pushing, pushing to the default branch, running arbitrary commands | Never. No tool can do these |
 
 There are two more checkpoints. Plan approval is optional (`REQUIRE_PLAN_APPROVAL`) and happens
-after the plan's searches but before any file is read. Recovery comes up when the fix attempts are used up or the tests
-couldn't run at all; the reviewer can allow another attempt, with guidance, or stop. All four
-checkpoints use the same endpoint, `POST /runs/{id}/approval`.
+after the plan's searches but before any file is read. Recovery comes up when the fix attempts
+are used up or the tests couldn't run at all; the reviewer can allow another attempt, with
+guidance, or stop. All four checkpoints use the same endpoint, `POST /runs/{id}/approval`.
 
 ## Publishing to GitHub
 
@@ -103,8 +103,11 @@ workflow then adds the *Changes* and *Tests* sections itself from what was recor
 request can't claim tests passed when they didn't.
 
 The rest of the text is still the model's, and in the first experiment half of the summaries got a
-detail wrong. So a second call checks the draft against the issue, the final diff and the test
-runs, lists anything they contradict or don't support, and returns corrected text. The reviewer
+detail wrong. So a second call checks the draft against the issue, the approved plan, the final
+diff and the test runs, lists anything they contradict or that appears nowhere in them, and returns
+corrected text. It's told what doesn't count as a problem: facts that follow directly from the
+code, and the same fact in other words. The first benchmark showed why that matters; without the
+plan in view, it struck a true statement about the plan. The reviewer
 sees the corrected version, what was changed, and the original. If the check finds nothing, the
 draft is used exactly as written, and if the check itself fails, the draft is used and marked as
 unchecked. `CHECK_PR_SUMMARY=false` turns it off.

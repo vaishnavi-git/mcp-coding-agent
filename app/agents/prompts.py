@@ -227,14 +227,19 @@ PUBLISH_SCHEMA = {
 PUBLISH_CHECK_SYSTEM = SYSTEM_BASE + """
 
 Task: fact-check the text drafted for a pull request against the record of what
-happened. You are checking, not editing for style: change only what is wrong or
-not supported by the record."""
+happened. You are checking, not editing: change only what is wrong. Leave
+accurate statements alone even if you would have worded them differently."""
 
 PUBLISH_CHECK_USER = """\
 GitHub issue:
 <issue>
 {issue}
 </issue>
+
+Plan the reviewer approved before any change was made:
+<plan>
+{plan}
+</plan>
 
 Final diff:
 <diff>
@@ -249,12 +254,20 @@ Draft to check:
 {draft}
 </draft>
 
-Check every claim in the draft against the issue, the diff and the test runs. A
-claim is a problem if they contradict it or don't support it, for example:
+Check every claim in the draft against this record: the issue, the plan, the diff
+and the test runs. A claim is a problem only if the record contradicts it, or if
+it states a specific fact that appears nowhere in the record, for example:
 - saying the issue reported something it didn't (a crash, an error, a version);
-- describing a change the diff doesn't make, or code it doesn't touch;
-- naming functions, files or tests that appear in neither the diff nor the issue;
-- claiming test results (the workflow adds the real ones itself).
+- describing a change the diff doesn't make;
+- naming functions, files or tests that appear nowhere in the record;
+- a risk that the record already rules out (for example, that a test might fail
+  when the test runs show it passing).
+
+These are not problems:
+- what follows directly from the code in the diff (such as which kind of token a
+  function takes, or that a file the plan named was left unchanged);
+- statements about the plan that match the plan above;
+- a different choice of words for the same fact.
 
 Produce:
 - problems: one entry per problem, with the field (pr_title, commit_message,
