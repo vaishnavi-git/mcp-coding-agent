@@ -27,6 +27,14 @@ Labels `enhancement`. Two things in one issue:
   tool (see [docs/SECURITY.md](../../docs/SECURITY.md)). Use this issue to check by hand how a
   real model reacts.
 
+## JavaScript and Java
+
+[sample-repo-js.json](sample-repo-js.json) and [sample-repo-java.json](sample-repo-java.json) hold
+the same two issues for [../sample-repo-js](../sample-repo-js) and
+[../sample-repo-java](../sample-repo-java). Only #42 changes: its code example, the failing test
+and the file the maintainer points at are in that language. With `PROJECT_LANGUAGE` detected from
+the repository, the matching file is used by default.
+
 ## Using your own issues
 
 Add entries with the same fields to this file (or point `GITHUB_ISSUES_FILE` at another file).

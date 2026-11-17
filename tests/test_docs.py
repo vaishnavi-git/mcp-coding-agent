@@ -163,6 +163,9 @@ def test_published_reports_contain_no_local_paths_or_keys() -> None:
 
 
 def test_issue_fixtures_are_described() -> None:
-    issues = json.loads(read(PROJECT_ROOT / "examples" / "issues" / "sample-repo.json"))["issues"]
     described = read(PROJECT_ROOT / "examples" / "issues" / "README.md")
-    assert all(f"## #{issue['number']}: {issue['title']}" in described for issue in issues)
+    for name in ("sample-repo.json", "sample-repo-js.json", "sample-repo-java.json"):
+        issues = json.loads(read(PROJECT_ROOT / "examples" / "issues" / name))["issues"]
+        assert [issue["number"] for issue in issues] == [42, 43], name
+        assert all(f"## #{issue['number']}: {issue['title']}" in described for issue in issues), name
+        assert name in described

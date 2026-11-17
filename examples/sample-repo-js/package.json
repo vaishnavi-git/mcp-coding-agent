@@ -1,0 +1,13 @@
+{
+  "name": "authkit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "In-memory session store with short-lived access tokens and rotating refresh tokens",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
