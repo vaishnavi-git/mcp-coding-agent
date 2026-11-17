@@ -44,18 +44,19 @@ A few things turned out differently from the plan:
 - Maven's console library tried to unpack a native helper into `/tmp`, which the sandbox mounts
   `noexec`, and printed an error on every run. The Java image now unpacks it at build time.
 
-## Look at the code before planning
+## Look at the code before planning (done)
 
-Right now the plan has to name the files it will change before the model has seen any code. On
-issue #43 all five plans named files that don't exist, which is where all five unplanned edits in
-the experiment came from. The plan step will work in three parts:
+The plan used to name the files it would change before the model had seen any code. On issue #43
+all five plans named files that don't exist, which is where all five unplanned edits in the
+experiment came from. The plan step now works in three parts:
 
-1. the model suggests searches;
+1. the model picks up to five searches;
 2. the workflow runs them;
-3. the model writes the plan with the results in front of it.
+3. the model writes the plan with the results in front of it, and is told to use paths it saw.
 
-The "search before editing" rule still holds, since those searches are recorded before any patch
-is proposed.
+The investigate step gets the same results instead of searching again, so this costs one small
+extra model call per run, not extra tool calls. Whether it actually removes the unplanned edits is
+something the next experiment has to show.
 
 ## Check the pull request summary
 
@@ -93,6 +94,6 @@ be mixed in.
 
 ## Tests for the rest
 
-- The three-part plan step, the summary check, per-step models and pricing.
+- The summary check, per-step models and pricing.
 - The benchmark harness: it refuses outside the samples, records evaluator decisions, and its
   acceptance tests pass on a right fix and fail on a wrong one.

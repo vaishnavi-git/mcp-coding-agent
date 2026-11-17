@@ -8,6 +8,9 @@
   are JavaScript and Java versions of the sample repository, sandbox images for both, and
   read-only docs for Node.js, MDN, the Java SE API and JUnit 5.
 - A test run in which no tests ran now counts as failed for every runner.
+- The plan is written after the first code searches instead of before: the model picks the
+  searches, the workflow runs them, and the plan (including the files it expects to change) is
+  written with the results in view. Investigation reuses those results.
 - The long implementation plan is now split into [design notes](docs/DESIGN.md), this changelog
   and a [roadmap](docs/ROADMAP.md). The README has been rewritten.
 - Comments and docstrings no longer refer to the stages the project was built in.

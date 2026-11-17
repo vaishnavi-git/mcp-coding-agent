@@ -266,6 +266,7 @@ def build_graph(deps: AgentDeps | None) -> StateGraph:
         return {"issue": outcome.text, "status": "running"}
 
     async def plan(state: AgentState) -> dict[str, Any]:
+        """Plan in three parts: the model picks searches, the workflow runs them, the model plans with the results."""
         if not state.get("issue"):
             raise WorkflowError("cannot plan before the issue has been read", code="invalid_state")
         deps_ = d()
@@ -273,18 +274,36 @@ def build_graph(deps: AgentDeps | None) -> StateGraph:
         feedback = ""
         if state.get("plan_feedback"):
             feedback = prompts.PLAN_FEEDBACK.format(feedback=state["plan_feedback"], previous=_clip(json.dumps(state.get("plan") or {}, indent=2), 6000))
-        user = prompts.PLAN_USER.format(repository=deps_.settings.github_repository, issue=state["issue"], instructions=extra, feedback=feedback)
-        result = await asyncio.to_thread(deps_.provider.generate_json, prompts.PLAN_SYSTEM, user, prompts.PLAN_SCHEMA, purpose="plan")
-        queries = [q.strip() for q in result.get("search_queries", []) if isinstance(q, str) and q.strip()][:5]
+        context = {"repository": deps_.settings.github_repository, "issue": state["issue"], "instructions": extra, "feedback": feedback}
+
+        asked = await asyncio.to_thread(
+            deps_.provider.generate_json, prompts.PLAN_SEARCH_SYSTEM, prompts.PLAN_SEARCH_USER.format(**context), prompts.PLAN_SEARCH_SCHEMA, purpose="plan_searches"
+        )
+        queries = [q.strip() for q in asked.get("search_queries", []) if isinstance(q, str) and q.strip()][:5]
         if not queries:
             title = state["issue"].splitlines()[0].split(":", 1)[-1].strip()
             queries = [title[:80]] if title else []
         if not queries:
-            raise WorkflowError("the plan did not include any search queries", code="plan_invalid")
+            raise WorkflowError("the model did not suggest any searches", code="plan_invalid")
+
+        earlier = [s for s in state.get("searches", []) if s.get("by") == "workflow"]  # from an earlier version of the plan
+        searches: list[dict[str, Any]] = []
+        for query in queries:
+            if any(s["query"] == query for s in earlier):
+                continue
+            outcome = await deps_.hub.call("search_repository", {"query": query}, node="plan")
+            searches.append({"query": query, "ok": not outcome.is_error, "by": "workflow", "result": _clip(outcome.text, 3000)})
+        if not any(s["ok"] for s in [*earlier, *searches]):
+            raise WorkflowError("every repository search failed: " + "; ".join(s["result"][:200] for s in searches), code="search_failed")
+        search_text = "\n\n".join(f"$ search_repository({s['query']!r})\n{s['result']}" for s in [*earlier, *searches])
+
+        result = await asyncio.to_thread(
+            deps_.provider.generate_json, prompts.PLAN_SYSTEM, prompts.PLAN_USER.format(**context, searches=search_text), prompts.PLAN_SCHEMA, purpose="plan"
+        )
         result["search_queries"] = queries
         files = result.get("files_to_change")
         result["files_to_change"] = list(dict.fromkeys(f.strip().removeprefix("./") for f in files if isinstance(f, str) and f.strip()))[:30] if isinstance(files, list) else []
-        return {"plan": result, "plan_feedback": ""}
+        return {"plan": result, "plan_feedback": "", "searches": searches}
 
     async def await_plan_approval(state: AgentState) -> dict[str, Any]:
         """Optional checkpoint (REQUIRE_PLAN_APPROVAL): approve the plan before any investigation."""
@@ -319,12 +338,10 @@ def build_graph(deps: AgentDeps | None) -> StateGraph:
 
     async def investigate(state: AgentState) -> dict[str, Any]:
         deps_ = d()
-        searches: list[dict[str, Any]] = []
-        for query in state["plan"]["search_queries"]:
-            outcome = await deps_.hub.call("search_repository", {"query": query}, node="investigate")
-            searches.append({"query": query, "ok": not outcome.is_error, "by": "workflow", "result": _clip(outcome.text, 3000)})
-        if not any(s["ok"] for s in searches):
-            raise WorkflowError("every repository search failed: " + "; ".join(s["result"][:200] for s in searches), code="search_failed")
+        planned = [s for s in state.get("searches", []) if s.get("by") == "workflow"]  # run while planning
+        if not any(s["ok"] for s in planned):
+            raise WorkflowError("cannot investigate before the repository has been searched", code="invalid_state")
+        searches: list[dict[str, Any]] = []  # the model's own searches
 
         files: list[str] = []
         docs: list[dict[str, Any]] = []
@@ -340,7 +357,7 @@ def build_graph(deps: AgentDeps | None) -> StateGraph:
                 searches.append({"query": args.get("query"), "ok": True, "by": "llm", "result": _clip(outcome.text, 1000)})
 
         tools = _llm_tools(deps_.hub, INVESTIGATE_TOOLS, optional=DOCS_TOOLS)
-        search_text = "\n\n".join(f"$ search_repository({s['query']!r})\n{s['result']}" for s in searches)
+        search_text = "\n\n".join(f"$ search_repository({s['query']!r})\n{s['result']}" for s in planned)
         loop = await run_tool_loop(
             provider=deps_.provider,
             hub=deps_.hub,

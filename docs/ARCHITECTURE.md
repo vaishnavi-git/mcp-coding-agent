@@ -117,9 +117,9 @@ flowchart TD
 | Step | What happens | Tools |
 |---|---|---|
 | `fetch_issue` | Read the issue. | `get_github_issue` |
-| `plan` | The model writes a plan: summary, steps, search queries, acceptance criteria, files to change. | none |
+| `plan` | The model picks up to five code searches, the workflow runs them, and the model writes the plan from what they found: summary, steps, acceptance criteria, files to change. | `search_repository` |
 | `await_plan_approval` | Optional (`REQUIRE_PLAN_APPROVAL`). | none |
-| `investigate` | The workflow runs the plan's searches, then the model reads code (and documentation) with read-only tools. | `search_repository`, `read_repository_file`, docs tools |
+| `investigate` | The model gets the search results from planning and reads code (and documentation) with read-only tools. | `search_repository`, `read_repository_file`, docs tools |
 | `propose` | The model proposes patches; each is validated without writing. | `propose_patch`, read tools |
 | `await_approval` | A human approves the exact patches, or rejects them with feedback. | none |
 | `apply` | Every approved patch is checked against the current files, then applied; the diff is captured. | `propose_patch`, `apply_patch`, `get_git_diff` |
@@ -142,8 +142,9 @@ sequenceDiagram
     Reviewer->>UI: start a run for issue 42
     UI->>WF: start (background)
     WF->>MCP: get_github_issue
-    WF->>Claude: plan
-    WF->>MCP: search_repository (plan's queries)
+    WF->>Claude: which searches?
+    WF->>MCP: search_repository (up to 5)
+    WF->>Claude: plan, with the search results
     loop investigate and propose (read-only tools, bounded)
         Claude->>WF: tool call
         WF->>MCP: read_repository_file / propose_patch / docs

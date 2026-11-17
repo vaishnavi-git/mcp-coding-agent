@@ -8,6 +8,7 @@ feedback, and failure paths.
 from __future__ import annotations
 
 import dataclasses
+import json
 from pathlib import Path
 
 import pytest
@@ -326,3 +327,32 @@ async def test_write_tools_are_never_offered_to_the_model(settings) -> None:
         with pytest.raises(WorkflowError, match="refusing to give the model"):
             _llm_tools(hub, ("read_repository_file",))
         assert isinstance(AgentDeps, type)
+
+
+async def test_the_plan_is_written_after_searching_the_code(settings) -> None:
+    provider = ScriptedProvider(plan=PLAN, turns={"investigate": list(INVESTIGATE), "propose": [[("propose_patch", {"path": "authkit/sessions.py", "patch": FULL_FIX})], "Fix."]})
+    runner, audit = make_runner(settings, provider)
+    view = await runner.start(42)
+    assert provider.calls[:3] == ["plan_searches", "plan", "investigate"]
+    searches = [c for c in audit.tool_calls(view["run"]["id"]) if c["tool"] == "search_repository"]
+    assert [c["node"] for c in searches] == ["plan", "plan"]  # run by the workflow while planning, before the plan exists
+    choose, write = [p for purpose, p in provider.prompts if purpose in ("plan_searches", "plan")]
+    assert "search_results" not in choose  # the first call only picks searches
+    assert "$ search_repository('_by_refresh')" in write and "authkit/sessions.py:" in write  # the plan sees real paths
+    assert view["state"]["plan"]["search_queries"] == PLAN["search_queries"]
+    investigate = next(p for purpose, p in provider.prompts if purpose == "investigate")
+    assert "$ search_repository('def refresh')" in investigate  # the results are passed on, not searched again
+
+
+async def test_planning_falls_back_to_the_issue_title_and_stops_if_every_search_fails(settings) -> None:
+    provider = ScriptedProvider(json_by_purpose={"plan_searches": [{"search_queries": ["   "]}], "plan": [PLAN]})
+    runner, audit = make_runner(settings, provider)
+    view = await runner.start(42)
+    searched = [json.loads(c["arguments"])["query"] for c in audit.tool_calls(view["run"]["id"]) if c["tool"] == "search_repository"]
+    assert searched == ["Refreshing a session twice logs the user out; old refresh tokens stay valid"]
+
+    provider = ScriptedProvider(json_by_purpose={"plan_searches": [{"search_queries": ["x" * 300]}], "plan": [PLAN]})  # the tool refuses it
+    runner, _ = make_runner(settings, provider)
+    view = await runner.start(42)
+    assert view["run"]["status"] == "failed" and view["failure"]["code"] == "search_failed" and view["failure"]["step"] == "plan"
+    assert provider.calls == ["plan_searches"]  # no plan is written without search results

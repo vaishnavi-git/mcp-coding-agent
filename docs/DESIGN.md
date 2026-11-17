@@ -92,7 +92,7 @@ versions, and Maven then runs offline against that cache.
 | Force pushing, pushing to the default branch, running arbitrary commands | Never. No tool can do these |
 
 There are two more checkpoints. Plan approval is optional (`REQUIRE_PLAN_APPROVAL`) and happens
-before any investigation. Recovery comes up when the fix attempts are used up or the tests
+after the plan's searches but before any file is read. Recovery comes up when the fix attempts are used up or the tests
 couldn't run at all; the reviewer can allow another attempt, with guidance, or stop. All four
 checkpoints use the same endpoint, `POST /runs/{id}/approval`.
 

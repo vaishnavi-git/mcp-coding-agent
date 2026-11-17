@@ -13,10 +13,34 @@ Rules:
 - Never weaken, skip or delete tests to make them pass.
 - If a tool returns an error, read the message and adapt; do not repeat the same failing call."""
 
+PLAN_SEARCH_SYSTEM = SYSTEM_BASE + """
+
+Task: read the GitHub issue and choose the first code searches. Nothing has been
+searched yet; the plan comes after you have seen what these searches find."""
+
+PLAN_SEARCH_USER = """\
+Repository: {repository}
+
+GitHub issue:
+<issue>
+{issue}
+</issue>
+{instructions}{feedback}
+Give 1-5 search_queries: short strings (identifiers, error messages, function or
+file names) most likely to find the code this issue is about and its tests. Each
+one is a plain substring search over the repository."""
+
+PLAN_SEARCH_SCHEMA = {
+    "type": "object",
+    "properties": {"search_queries": {"type": "array", "items": {"type": "string"}}},
+    "required": ["search_queries"],
+    "additionalProperties": False,
+}
+
 PLAN_SYSTEM = SYSTEM_BASE + """
 
-Task: read the GitHub issue and produce an implementation plan before any
-code is examined or changed."""
+Task: plan the change for a GitHub issue. You can see what the first repository
+searches found; base the plan on that code rather than on guesses."""
 
 PLAN_USER = """\
 Repository: {repository}
@@ -26,25 +50,28 @@ GitHub issue:
 {issue}
 </issue>
 {instructions}{feedback}
+What the first repository searches found:
+<search_results>
+{searches}
+</search_results>
+
 Produce:
 - summary: one or two sentences describing the problem and the expected behavior.
 - steps: an ordered, concrete plan (investigate, change, add a regression test, run tests).
-- search_queries: 1-5 short code search strings (identifiers, error messages,
-  function names) most likely to locate the relevant code.
 - acceptance_criteria: observable conditions that show the issue is fixed.
-- files_to_change: the repository paths you expect to change or create (best guess before
-  reading the code; include test files). The reviewer compares the final change against it."""
+- files_to_change: the repository paths you expect to change or create, including test
+  files. Use paths that appear in the search results, or new files next to them; do
+  not invent paths. The reviewer compares the final change against this list."""
 
 PLAN_SCHEMA = {
     "type": "object",
     "properties": {
         "summary": {"type": "string"},
         "steps": {"type": "array", "items": {"type": "string"}},
-        "search_queries": {"type": "array", "items": {"type": "string"}},
         "acceptance_criteria": {"type": "array", "items": {"type": "string"}},
         "files_to_change": {"type": "array", "items": {"type": "string"}},
     },
-    "required": ["summary", "steps", "search_queries", "acceptance_criteria", "files_to_change"],
+    "required": ["summary", "steps", "acceptance_criteria", "files_to_change"],
     "additionalProperties": False,
 }
 
@@ -81,7 +108,7 @@ GitHub issue:
 Plan:
 {plan}
 
-Results of the planned searches:
+What the searches found while planning:
 {searches}
 
 Investigate, then reply with your findings:

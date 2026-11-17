@@ -306,18 +306,23 @@ async def test_tests_can_be_rerun_once_docker_is_back(settings) -> None:
 async def test_plan_approval_checkpoint(settings) -> None:
     settings = dataclasses.replace(settings, require_plan_approval=True)
     revised = {**PLAN, "summary": "Revised: rotate and revoke refresh tokens."}
-    provider = ScriptedProvider(json_by_purpose={"plan": [PLAN, revised]}, turns={"investigate": list(INVESTIGATE), "propose": [FIX_BOTH, "Fix."]})
+    searches = {"search_queries": PLAN["search_queries"]}
+    provider = ScriptedProvider(json_by_purpose={"plan_searches": [searches], "plan": [PLAN, revised]}, turns={"investigate": list(INVESTIGATE), "propose": [FIX_BOTH, "Fix."]})
     runner, audit = make_runner(settings, provider)
     view = await runner.start(42)
     run_id = view["run"]["id"]
     pending = view["pending_approval"]
     assert pending["kind"] == "plan_approval" and pending["reason"] == "initial plan" and pending["plan"]["summary"] == PLAN["summary"]
-    assert [c["tool"] for c in audit.tool_calls(run_id)] == ["get_github_issue"]  # nothing investigated yet
+    # Planning only searched (the plan is written from what the searches found); nothing was read or proposed.
+    assert [c["tool"] for c in audit.tool_calls(run_id)] == ["get_github_issue", "search_repository", "search_repository"]
+    first_plan = [p for purpose, p in provider.prompts if purpose == "plan"][0]
+    assert "$ search_repository('def refresh')" in first_plan and "authkit/sessions.py" in first_plan
 
     view = await runner.resume(run_id, approved=False, feedback="Also cover revoking the used token.")
     assert view["pending_approval"]["kind"] == "plan_approval" and view["pending_approval"]["reason"] == "revised plan"
     replan = [p for purpose, p in provider.prompts if purpose == "plan"][-1]
     assert "Also cover revoking the used token." in replan and PLAN["summary"] in replan
+    assert [c["tool"] for c in audit.tool_calls(run_id)].count("search_repository") == 2  # the same searches are not run twice
 
     view = await runner.resume(run_id, approved=True)
     assert view["pending_approval"]["kind"] == "patch_approval" and view["state"]["plan"]["summary"] == revised["summary"]
@@ -338,7 +343,8 @@ async def test_timeline_and_usage_are_recorded_per_step(settings) -> None:
     assert [e["step"] for e in timeline] == ["fetch_issue", "plan", "investigate", "propose", "apply", "run_tests", "draft_publication"]
     assert all(e["outcome"] == "ok" and e["duration_ms"] >= 0 and e["started_at"] for e in timeline)
     by_step = {e["step"]: e for e in timeline}
-    assert by_step["investigate"]["llm_calls"] == 3 and by_step["investigate"]["tool_calls"] == 4  # 2 searches + 2 reads
+    assert by_step["plan"]["llm_calls"] == 2 and by_step["plan"]["tool_calls"] == 2  # choose searches, run 2 searches, write the plan
+    assert by_step["investigate"]["llm_calls"] == 3 and by_step["investigate"]["tool_calls"] == 2  # 2 reads
     assert by_step["apply"]["llm_calls"] == 0 and by_step["apply"]["tool_calls"] == 5  # 2 checks + 2 patches + git diff
     usage = view["usage"]
     assert sum(e["cost_usd"] for e in timeline) == pytest.approx(usage["cost_usd"])

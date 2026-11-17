@@ -16,7 +16,7 @@ uses the local `node` in place of Docker and is skipped if there isn't one.
 
 ## Last full run
 
-595 tests. With Docker running and the three sandbox images built, all 595 pass; this was checked
+597 tests. With Docker running and the three sandbox images built, all 597 pass; this was checked
 on macOS on Apple silicon with Docker Desktop (engine 29.9.3). Without Docker, the three
 real-Docker tests are skipped. A run takes about two minutes on a laptop.
 

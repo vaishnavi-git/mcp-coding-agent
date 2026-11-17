@@ -53,8 +53,9 @@ fetch_issue → plan → [approve plan, optional] → investigate → propose �
      tests pass → draft_publication → [approve publication] → publish → finalize
 ```
 
-The model reads the issue, writes a plan, searches and reads the code, and proposes patches. The
-run then pauses until you approve them. Approved patches are applied and the tests run in Docker.
+The model reads the issue and picks a few code searches. The workflow runs them, and the model
+writes a plan from what they found, then reads the code and proposes patches. The run then pauses
+until you approve them. Approved patches are applied and the tests run in Docker.
 If they fail, the model sees which tests failed and tries again, up to a limit, after which you
 decide. When the tests pass it drafts the branch name, commit message and pull request, and pauses
 again. The *Changes* and *Tests* sections of the PR come from what actually happened, not from the
@@ -186,7 +187,7 @@ pytest -m path_traversal        # one test category
 pytest --cov=app
 ```
 
-There are 595 tests. With Docker running and the sandbox image built they all pass; without
+There are 597 tests. With Docker running and the sandbox image built they all pass; without
 Docker, the one test that needs it is skipped. CI runs the linter and the whole suite, including
 the Docker test, on every push ([.github/workflows/tests.yml](.github/workflows/tests.yml)).
 
@@ -219,9 +220,8 @@ Streamlit UI). [docs/TESTING.md](docs/TESTING.md) has the details.
 
 ## What's next
 
-I'm working on letting the plan step look at the code before it guesses which files to change, a
-self-check for the pull request summary, per-step model settings, and a benchmark mode with hidden
-acceptance tests to compare models fairly. [docs/ROADMAP.md](docs/ROADMAP.md) has the details.
+I'm working on a self-check for the pull request summary, per-step model settings, and a benchmark
+mode with hidden acceptance tests to compare models fairly. [docs/ROADMAP.md](docs/ROADMAP.md) has the details.
 
 ## Docs
 

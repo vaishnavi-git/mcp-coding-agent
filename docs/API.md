@@ -118,7 +118,7 @@ One body answers every checkpoint:
 
 | `pending_approval.kind` | Shows | `approved: true` | `approved: false` |
 |---|---|---|---|
-| `plan_approval` (only with `REQUIRE_PLAN_APPROVAL=true`) | `plan`, `reason` | Investigate | With `feedback`: a revised plan. Without: run `rejected` |
+| `plan_approval` (only with `REQUIRE_PLAN_APPROVAL=true`; the plan's searches have already run) | `plan`, `reason` | Investigate | With `feedback`: a revised plan. Without: run `rejected` |
 | `patch_approval` | `proposals[]` (`path`, `diff`, `added`, `removed`, `is_new_file`, `patch_sha256`), `outside_plan` (proposed files the plan did not list), `rationale`, `plan`, `reason` | Apply exactly these patches, then run the tests | With `feedback`: a revised proposal (up to `MAX_REVISIONS`). Without: run `rejected` |
 | `recovery` | `reason` (`fix_attempts_exhausted` or `tests_could_not_run`), `message`, `last_test_run`, `fix_attempts`, `applied_files`, `options` | One more fix attempt (`feedback` becomes guidance for the model), or run the tests again | Stop: `tests_failed`, or `failed` if the tests never ran |
 | `publish_approval` | `branch_name`, `commit_message`, `pr_title`, `pr_body`, `base`, `draft`, `files`, `actions`, `publish_options` | Publish up to `publish_up_to` (`branch`, `push` or `pull_request`; default `pull_request`), with any `edits` | With `feedback`: a redrafted publication. Without: `completed`, nothing published |
