@@ -7,7 +7,7 @@ name comes from ANTHROPIC_MODEL and the key from ANTHROPIC_API_KEY.
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -15,6 +15,16 @@ from dotenv import load_dotenv
 from app.languages import PROFILES, resolve_language
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+# Steps that can have their own model (ANTHROPIC_MODEL_<STEP>) and effort (ANTHROPIC_EFFORT_<STEP>),
+# and the model calls ("purposes") that belong to each.
+MODEL_STEPS: dict[str, tuple[str, ...]] = {
+    "plan": ("plan_searches", "plan"),
+    "investigate": ("investigate",),
+    "propose": ("propose",),
+    "publish": ("draft_publication", "check_publication"),
+    "summary": ("summary",),
+}
 
 
 def _list(value: str | None) -> tuple[str, ...]:
@@ -29,6 +39,10 @@ def _bool(value: str | None, default: bool) -> bool:
 
 def _float_or_none(value: str | None) -> float | None:
     return float(value) if value is not None and value.strip() != "" else None
+
+
+def _steps(values: dict[str, str | None]) -> dict[str, str]:
+    return {step: value.strip() for step, value in values.items() if value and value.strip()}
 
 
 def _path(value: str | None, default: Path) -> Path:
@@ -105,6 +119,9 @@ class Settings:
     # Project language: python, javascript or java (PROJECT_LANGUAGE, detected from REPO_PATH by default).
     # It picks the defaults for TEST_COMMAND, TEST_COMMAND_ALLOWLIST, SANDBOX_IMAGE and the fixture issues.
     project_language: str = "python"
+    # Per-step overrides of ANTHROPIC_MODEL and ANTHROPIC_EFFORT, keyed by MODEL_STEPS name.
+    anthropic_model_by_step: dict[str, str] = field(default_factory=dict)
+    anthropic_effort_by_step: dict[str, str] = field(default_factory=dict)
 
     @property
     def database_path(self) -> Path:
@@ -117,6 +134,30 @@ class Settings:
     @property
     def docs_cache_dir(self) -> Path:
         return self.data_dir / "docs_cache"
+
+    @property
+    def models_by_purpose(self) -> dict[str, str]:
+        return {purpose: model for step, model in self.anthropic_model_by_step.items() for purpose in MODEL_STEPS.get(step, ())}
+
+    @property
+    def effort_by_purpose(self) -> dict[str, str]:
+        return {purpose: effort for step, effort in self.anthropic_effort_by_step.items() for purpose in MODEL_STEPS.get(step, ())}
+
+    @property
+    def models_in_use(self) -> list[str]:
+        return sorted({self.anthropic_model, *self.anthropic_model_by_step.values()} - {""})
+
+    def model_setup(self) -> dict[str, object]:
+        """What a run is configured with, recorded with the run so evaluations can group by it."""
+        return {
+            "model": self.anthropic_model,
+            "effort": self.anthropic_effort,
+            "thinking": self.anthropic_thinking,
+            "models_by_step": dict(sorted(self.anthropic_model_by_step.items())),
+            "effort_by_step": dict(sorted(self.anthropic_effort_by_step.items())),
+            "check_pr_summary": self.check_pr_summary,
+            "language": self.project_language,
+        }
 
     @property
     def price_overrides(self) -> dict[str, float | None]:
@@ -192,4 +233,22 @@ class Settings:
             check_pr_summary=_bool(e("CHECK_PR_SUMMARY"), True),
             data_dir=_path(e("DATA_DIR"), PROJECT_ROOT / "data"),
             project_language=language,
+            anthropic_model_by_step=_steps(
+                {
+                    "plan": e("ANTHROPIC_MODEL_PLAN"),
+                    "investigate": e("ANTHROPIC_MODEL_INVESTIGATE"),
+                    "propose": e("ANTHROPIC_MODEL_PROPOSE"),
+                    "publish": e("ANTHROPIC_MODEL_PUBLISH"),
+                    "summary": e("ANTHROPIC_MODEL_SUMMARY"),
+                }
+            ),
+            anthropic_effort_by_step=_steps(
+                {
+                    "plan": e("ANTHROPIC_EFFORT_PLAN"),
+                    "investigate": e("ANTHROPIC_EFFORT_INVESTIGATE"),
+                    "propose": e("ANTHROPIC_EFFORT_PROPOSE"),
+                    "publish": e("ANTHROPIC_EFFORT_PUBLISH"),
+                    "summary": e("ANTHROPIC_EFFORT_SUMMARY"),
+                }
+            ),
         )

@@ -186,8 +186,12 @@ invocation of a run.
 | `MAX_LLM_CALLS_PER_RUN` | 100 | before every model call |
 | `MAX_TASK_COST_USD` | 5.00 (0 turns it off) | before every model call |
 
-Cost is tokens times the model's price from [config/model_prices.json](../config/model_prices.json),
-with cache reads and writes priced separately. Since the check runs before each call, a run can
+Each step can use its own model and effort level (`ANTHROPIC_MODEL_<STEP>`,
+`ANTHROPIC_EFFORT_<STEP>`), so cost is worked out per call: that call's tokens times the price of
+the model it used, from [config/model_prices.json](../config/model_prices.json), with cache reads
+and writes priced separately. Haiku 5.5 has two rate cards split at a 100K-token prompt, and the
+price file can express that. Before a run starts with a cost limit, every model it might use must
+have a price. Since the check runs before each call, a run can
 go over the cost limit by one call at most. Approved actions are never cut off halfway: applying
 patches, running tests and publishing always finish, and the next step that needs the model
 stops the run instead.

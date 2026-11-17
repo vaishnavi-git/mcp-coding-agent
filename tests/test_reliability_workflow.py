@@ -17,7 +17,7 @@ from app.llm.base import LLMRateLimitError
 from app.mcp.client import MCPHub, ServerConfig, tool_retry_policy
 from app.mcp.sandbox_server import ExecResult
 from app.storage.audit import AuditStore
-from tests.fakes import FakeRunner, LocalPytestRunner, ScriptedProvider, inprocess_hub_factory, inprocess_servers
+from tests.fakes import FakeRunner, LocalPytestRunner, ScriptedProvider, as_configured, inprocess_hub_factory, inprocess_servers
 from tests.test_agent_workflow import FULL_FIX, INVESTIGATE, PARTIAL_FIX, PLAN, REGRESSION_TEST, REVOKE_USED_TOKEN, git_status
 
 pytestmark = pytest.mark.anyio
@@ -31,7 +31,7 @@ def make_runner(settings, provider, sandbox=None, servers=None) -> tuple[AgentRu
     runner = AgentRunner(
         settings,
         audit=audit,
-        provider_factory=lambda run_id: provider,
+        provider_factory=lambda run_id: as_configured(provider, settings),
         hub_factory=inprocess_hub_factory(settings, sandbox or LocalPytestRunner(), audit, servers=servers),
     )
     return runner, audit
@@ -208,7 +208,7 @@ async def test_mcp_server_that_fails_to_start(settings) -> None:
     provider = scripted()
     audit = AuditStore(settings.database_path)
     broken = ServerConfig("github", StdioServerParameters(command="/nonexistent/mcp-server"))
-    runner = AgentRunner(settings, audit=audit, provider_factory=lambda run_id: provider, hub_factory=lambda run_id: MCPHub([broken], audit=audit, run_id=run_id))
+    runner = AgentRunner(settings, audit=audit, provider_factory=lambda run_id: as_configured(provider, settings), hub_factory=lambda run_id: MCPHub([broken], audit=audit, run_id=run_id))
     view = await runner.start(42)
     run_id = view["run"]["id"]
     failure = view["failure"]

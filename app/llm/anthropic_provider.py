@@ -1,6 +1,7 @@
 """Anthropic implementation of LLMProvider (official ``anthropic`` SDK, Messages API).
 
-- The model comes from settings (``ANTHROPIC_MODEL``), never from code.
+- The model comes from settings (``ANTHROPIC_MODEL``, or ``ANTHROPIC_MODEL_<STEP>`` for one
+  step), never from code. The model each call used is in its metadata, so it is priced right.
 - SDK errors are mapped onto the neutral LLM error classes.
 - Each call logs metadata only (model, purpose, latency, tokens, stop reason,
   request id). Prompts, source code and the API key are never logged.
@@ -48,10 +49,14 @@ class AnthropicProvider(LLMProvider):
         max_retries: int = 0,
         client: anthropic.Anthropic | None = None,
         metrics_sink: MetricsSink | None = None,
+        models_by_purpose: dict[str, str] | None = None,
+        effort_by_purpose: dict[str, str] | None = None,
     ) -> None:
         if not model:
             raise ValueError("model is required (set ANTHROPIC_MODEL)")
         self.model = model
+        self.models_by_purpose = dict(models_by_purpose or {})
+        self.effort_by_purpose = dict(effort_by_purpose or {})
         self.max_tokens = max_tokens
         self.effort = effort
         self.thinking = thinking
@@ -83,25 +88,29 @@ class AnthropicProvider(LLMProvider):
             timeout_seconds=settings.anthropic_timeout_seconds,
             max_retries=0,
             metrics_sink=metrics_sink,
+            models_by_purpose=settings.models_by_purpose,
+            effort_by_purpose=settings.effort_by_purpose,
         )
 
     # ------------------------------------------------------------------ core
     def _create(self, purpose: str, **request: Any) -> Any:
-        params: dict[str, Any] = {"model": self.model, "max_tokens": self.max_tokens, **request}
+        model = self.models_by_purpose.get(purpose) or self.model
+        effort = self.effort_by_purpose.get(purpose) or self.effort
+        params: dict[str, Any] = {"model": model, "max_tokens": self.max_tokens, **request}
         if self.thinking == "adaptive":
             params["thinking"] = {"type": "adaptive"}
-        if self.effort:
-            params["output_config"] = {**params.get("output_config", {}), "effort": self.effort}
-        meta: dict[str, Any] = {"purpose": purpose, "model": self.model}
+        if effort:
+            params["output_config"] = {**params.get("output_config", {}), "effort": effort}
+        meta: dict[str, Any] = {"purpose": purpose, "model": model}
         start = time.monotonic()
         try:
             response = self.client.messages.create(**params)
         except anthropic.AuthenticationError as exc:
             raise self._fail(meta, start, LLMAuthenticationError("Anthropic rejected the API key (401). Check ANTHROPIC_API_KEY.", status_code=401), exc) from exc
         except anthropic.PermissionDeniedError as exc:
-            raise self._fail(meta, start, LLMAuthenticationError(f"The API key is not allowed to use model {self.model!r} (403).", status_code=403), exc) from exc
+            raise self._fail(meta, start, LLMAuthenticationError(f"The API key is not allowed to use model {model!r} (403).", status_code=403), exc) from exc
         except anthropic.NotFoundError as exc:
-            raise self._fail(meta, start, LLMAPIError(f"Model {self.model!r} was not found (404). Check ANTHROPIC_MODEL.", status_code=404), exc) from exc
+            raise self._fail(meta, start, LLMAPIError(f"Model {model!r} was not found (404). Check ANTHROPIC_MODEL and any ANTHROPIC_MODEL_<STEP>.", status_code=404), exc) from exc
         except anthropic.RateLimitError as exc:
             retry_after = _retry_after(exc)
             msg = "Anthropic rate limit reached (429)" + (f"; retry after {retry_after:.0f}s." if retry_after else ".")
@@ -119,9 +128,8 @@ class AnthropicProvider(LLMProvider):
                 meta, start, LLMAPIError(f"Anthropic API {label} ({code}).", status_code=code, retryable=code >= 500, retry_after=_retry_after(exc)), exc
             ) from exc
         usage = response.usage
-        meta.update(
+        meta.update(  # "model" stays the requested name: that is what the price file and the reports use
             latency_ms=int((time.monotonic() - start) * 1000),
-            model=response.model,
             input_tokens=usage.input_tokens,
             output_tokens=usage.output_tokens,
             cache_read_tokens=getattr(usage, "cache_read_input_tokens", None) or 0,

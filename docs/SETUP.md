@@ -147,6 +147,8 @@ All settings are environment variables, read from `.env` if present (see
 | `ANTHROPIC_THINKING` | `adaptive` | `adaptive` or `none`. |
 | `ANTHROPIC_TIMEOUT_SECONDS` | `120` | Per-request timeout. |
 | `ANTHROPIC_MAX_RETRIES` | `3` | Retries of 429, 5xx, 529 and timeouts, with backoff (the SDK's own retries are off). |
+| `ANTHROPIC_MODEL_PLAN`, `ANTHROPIC_MODEL_INVESTIGATE`, `ANTHROPIC_MODEL_PROPOSE`, `ANTHROPIC_MODEL_PUBLISH`, `ANTHROPIC_MODEL_SUMMARY` | (unset: `ANTHROPIC_MODEL`) | A different model for one step. `PLAN` covers choosing the searches and writing the plan; `PUBLISH` covers drafting and checking the pull request text. Each call is priced at the model it used, so with a cost limit every model needs a price. |
+| `ANTHROPIC_EFFORT_PLAN`, `ANTHROPIC_EFFORT_INVESTIGATE`, `ANTHROPIC_EFFORT_PROPOSE`, `ANTHROPIC_EFFORT_PUBLISH`, `ANTHROPIC_EFFORT_SUMMARY` | (unset: `ANTHROPIC_EFFORT`) | A different effort level for one step. |
 
 ### Repository and GitHub
 

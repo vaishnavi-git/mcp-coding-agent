@@ -14,6 +14,11 @@
 - The drafted pull request text is fact-checked against the issue, the diff and the test runs
   before the publication checkpoint. Corrections are shown to the reviewer, with the original
   kept. `CHECK_PR_SUMMARY=false` turns it off.
+- Each step can have its own model and effort level (`ANTHROPIC_MODEL_<STEP>`,
+  `ANTHROPIC_EFFORT_<STEP>`). Every call is priced at the model it used, Haiku 5.5 is in the price
+  file with its two rate cards, and each run records its setup.
+- The evaluation report groups runs by setup and adds cost by step, the cache hit rate, and how
+  often the summary check corrected the pull request text.
 - The long implementation plan is now split into [design notes](docs/DESIGN.md), this changelog
   and a [roadmap](docs/ROADMAP.md). The README has been rewritten.
 - Comments and docstrings no longer refer to the stages the project was built in.

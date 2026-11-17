@@ -67,13 +67,18 @@ corrections, and the original stays in the run record. It's on by default (`CHEC
 costs one small call per draft; whether it catches the kind of mistake the experiment found is for
 the next experiment to show.
 
-## A model and effort level per step
+## A model and effort level per step (done)
 
 - `ANTHROPIC_MODEL_<STEP>` and `ANTHROPIC_EFFORT_<STEP>` for `PLAN`, `INVESTIGATE`, `PROPOSE`,
   `PUBLISH` and `SUMMARY`, falling back to the general settings.
-- Each call is priced at the model it actually used, and Haiku 5.5 is added to the price file.
-- A run records its model setup, and the evaluation can group by it.
-- `scripts/evaluate.py` reports cost by step and the cache hit rate.
+- Each call is priced at the model it actually used. Haiku 5.5 is in the price file with both of
+  its rate cards (prompts up to 100K tokens, and over).
+- A run records its setup, and the evaluation groups by it.
+- `scripts/evaluate.py` reports cost by step, the cache hit rate, and how often the summary check
+  corrected something.
+
+Nothing has been switched to a cheaper model yet. Investigation is half the cost, so it's the
+obvious candidate for Haiku 5.5, but that should come out of a comparison, not a guess.
 
 ## A benchmark mode for comparing models
 
@@ -96,6 +101,5 @@ be mixed in.
 
 ## Tests for the rest
 
-- Per-step models and pricing.
 - The benchmark harness: it refuses outside the samples, records evaluator decisions, and its
   acceptance tests pass on a right fix and fail on a wrong one.

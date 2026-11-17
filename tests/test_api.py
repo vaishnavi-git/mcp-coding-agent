@@ -9,7 +9,7 @@ from app.agents.runner import AgentRunner
 from app.api import main as api
 from app.llm.base import LLMRateLimitError
 from app.storage.audit import AuditStore
-from tests.fakes import LocalPytestRunner, ScriptedProvider, inprocess_hub_factory
+from tests.fakes import LocalPytestRunner, ScriptedProvider, as_configured, inprocess_hub_factory
 from tests.test_agent_workflow import FULL_FIX, INVESTIGATE, PLAN, REGRESSION_TEST
 
 
@@ -23,7 +23,7 @@ def client(settings):
         },
     )
     audit = AuditStore(settings.database_path)
-    runner = AgentRunner(settings, audit=audit, provider_factory=lambda run_id: provider, hub_factory=inprocess_hub_factory(settings, LocalPytestRunner(), audit))
+    runner = AgentRunner(settings, audit=audit, provider_factory=lambda run_id: as_configured(provider, settings), hub_factory=inprocess_hub_factory(settings, LocalPytestRunner(), audit))
     api.app.dependency_overrides[api.get_runner] = lambda: runner
     api._runner = runner  # used by background tasks
     with TestClient(api.app) as test_client:

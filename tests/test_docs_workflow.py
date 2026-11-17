@@ -11,7 +11,7 @@ from app.agents.coding_agent import DOCS_TOOLS
 from app.agents.runner import AgentRunner
 from app.storage.audit import AuditStore
 from tests.docs_site import FakeDocsWeb
-from tests.fakes import LocalPytestRunner, ScriptedProvider, inprocess_hub_factory
+from tests.fakes import LocalPytestRunner, ScriptedProvider, as_configured, inprocess_hub_factory
 from tests.test_agent_workflow import FULL_FIX, PLAN, REGRESSION_TEST
 
 pytestmark = pytest.mark.anyio
@@ -26,7 +26,7 @@ def make_runner(settings, provider, web: FakeDocsWeb | None = None) -> tuple[Age
     runner = AgentRunner(
         settings,
         audit=audit,
-        provider_factory=lambda run_id: provider,
+        provider_factory=lambda run_id: as_configured(provider, settings),
         hub_factory=inprocess_hub_factory(settings, LocalPytestRunner(), audit, docs_web=web),
     )
     return runner, audit

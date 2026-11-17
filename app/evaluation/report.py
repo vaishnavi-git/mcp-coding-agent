@@ -55,6 +55,8 @@ SUMMARY_ROWS: list[tuple[str, Any]] = [
     ("Total cost", lambda a: usd(a["total_cost_usd"])),
     ("Mean cost per run", lambda a: usd(a["mean_cost_per_run_usd"])),
     ("Cost per resolved task", lambda a: usd(a["cost_per_resolved_task_usd"])),
+    ("Cache hit rate (prompt tokens read from cache)", lambda a: pct(a["cache_hit_rate"])),
+    ("PR text corrected by the summary check", lambda a: NA if not a["summary_checks"] else f"{a['summary_checks_corrected']} of {a['summary_checks']}"),
 ]
 
 
@@ -72,7 +74,8 @@ def render_markdown(summary: dict[str, Any], rows: list[dict[str, Any]], *, sour
         out += ["No runs matched the selection, so nothing was measured.", ""]
         return "\n".join(out)
 
-    groups = [("All runs", summary["overall"])] + ([(f"`{m}`", a) for m, a in summary["by_model"].items()] if len(summary["by_model"]) > 1 else [])
+    by_setup = summary.get("by_setup") or summary["by_model"]
+    groups = [("All runs", summary["overall"])] + ([(f"`{m}`", a) for m, a in by_setup.items()] if len(by_setup) > 1 else [])
     out += ["## Summary", "", "| Metric | " + " | ".join(name for name, _ in groups) + " |", "|---" * (len(groups) + 1) + "|"]
     for label, fn in SUMMARY_ROWS:
         out.append(f"| {label} | " + " | ".join(fn(agg) for _, agg in groups) + " |")
@@ -80,6 +83,13 @@ def render_markdown(summary: dict[str, Any], rows: list[dict[str, Any]], *, sour
     out += ["", f"Run statuses: {statuses}.", ""]
 
     overall = summary["overall"]
+    out += ["## Cost by step", ""]
+    if overall["cost_by_step"]:
+        out += ["| Model call | Calls | Cost | Share of cost |", "|---|---|---|---|"]
+        out += [f"| `{name}` | {s['calls']} | {usd(s['cost_usd'])} | {pct(s['share'])} |" for name, s in overall["cost_by_step"].items()]
+    else:
+        out.append("No model calls.")
+    out.append("")
     for title, key in (("Model call latency by purpose", "llm_latency_ms"), ("Tool call duration by tool", "tool_duration_ms"), ("Workflow step duration", "step_duration_ms")):
         dist = overall[key]
         out += [f"## {title}", ""]
@@ -93,14 +103,14 @@ def render_markdown(summary: dict[str, Any], rows: list[dict[str, Any]], *, sour
     out += [
         "## Runs",
         "",
-        "| Run | Issue | Model | Status | Resolved | Test runs (passed) | Tool calls | Model calls | Cost | Wall clock | Agent time | Files edited | Unplanned | Reverted |",
+        "| Run | Issue | Setup | Status | Resolved | Test runs (passed) | Tool calls | Model calls | Cost | Wall clock | Agent time | Files edited | Unplanned | Reverted |",
         "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in rows:
         unplanned = NA if r["unplanned_edits"] is None else str(len(r["unplanned_edits"]))
         status = f"{r['status']} ({r['failure_code']})" if r["failure_code"] else r["status"]
         out.append(
-            f"| `{r['run_id']}` | #{r['issue']} | `{r['model']}` | {status} | "
+            f"| `{r['run_id']}` | #{r['issue']} | `{r['setup']}` | {status} | "
             f"{'yes' if r['resolved'] else 'no'} | {r['test_runs']} ({r['test_runs_passed']}) | {r['tool_calls']} | {r['llm_calls']} | {usd(r['cost_usd'])} | "
             f"{secs(r['wall_seconds'])} | {secs(r['agent_seconds'])} | {len(r['files_edited'])} | {unplanned} | {len(r['reverted_edits'])} |"
         )

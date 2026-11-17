@@ -78,6 +78,9 @@ The numbers above only show the shape; they are not measurements.
 
 - `state.plan`: `summary`, `steps`, `search_queries`, `acceptance_criteria`,
   `files_to_change`.
+- `run.setup`: what the run was started with: `model`, `effort`, `thinking`, `models_by_step`,
+  `effort_by_step`, `check_pr_summary` and `language`. Runs recorded before this was added have
+  `null`.
 - `state.test_runs[]`: `attempt`, `command`, `status` (`PASSED`, `FAILED`, `TIMED OUT`,
   `ERROR`), `exit_code`, `summary`, `output`, `failure_kind`, `failing_tests`.
 - `state.timeline[]`: one entry per step, with `step`, `outcome`, `started_at`, `duration_ms`,

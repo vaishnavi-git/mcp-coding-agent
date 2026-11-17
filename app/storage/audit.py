@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS runs (
     updated_at TEXT NOT NULL,
     error TEXT,
     failure TEXT,                   -- JSON failure record
-    instructions TEXT               -- extra guidance given at start (needed to retry from scratch)
+    instructions TEXT,              -- extra guidance given at start (needed to retry from scratch)
+    setup TEXT                      -- JSON: models, effort and options the run was started with
 );
 CREATE TABLE IF NOT EXISTS tool_calls (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -85,7 +86,7 @@ CREATE INDEX IF NOT EXISTS events_run ON events(run_id, id);
 
 # Columns added after the first schema version; added to existing databases on open.
 MIGRATIONS = {
-    "runs": {"failure": "TEXT", "instructions": "TEXT"},
+    "runs": {"failure": "TEXT", "instructions": "TEXT", "setup": "TEXT"},
     "tool_calls": {"attempt": "INTEGER"},
     "llm_calls": {"cost_usd": "REAL"},
 }
@@ -136,12 +137,12 @@ class AuditStore:
             return [dict(r) for r in self.db.execute(sql, params).fetchall()]
 
     # ------------------------------------------------------------- runs
-    def create_run(self, issue_number: int, repository: str, model: str, instructions: str = "") -> str:
+    def create_run(self, issue_number: int, repository: str, model: str, instructions: str = "", setup: dict[str, Any] | None = None) -> str:
         run_id = datetime.now(UTC).strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:6]
         now = _now()
         self._exec(
-            "INSERT INTO runs (id, issue_number, repository, model, status, created_at, updated_at, instructions) VALUES (?,?,?,?,?,?,?,?)",
-            (run_id, issue_number, repository, model, "queued", now, now, redact(instructions) if instructions else ""),
+            "INSERT INTO runs (id, issue_number, repository, model, status, created_at, updated_at, instructions, setup) VALUES (?,?,?,?,?,?,?,?,?)",
+            (run_id, issue_number, repository, model, "queued", now, now, redact(instructions) if instructions else "", json.dumps(setup) if setup else None),
         )
         return run_id
 
@@ -154,6 +155,7 @@ class AuditStore:
     @staticmethod
     def _run_row(row: dict) -> dict:
         row["failure"] = json.loads(row["failure"]) if row.get("failure") else None
+        row["setup"] = json.loads(row["setup"]) if row.get("setup") else None
         return row
 
     def get_run(self, run_id: str) -> dict | None:

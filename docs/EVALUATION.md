@@ -41,11 +41,16 @@ the model has no price, a recovery rate when no test run failed, and so on.
 | Completion time | **Wall clock**: start to the last status change. **Agent working time**: the sum of step durations in the run's timeline. **Reviewer wait**: time between each approval request and its decision. |
 | Unplanned file edits | Applied files that the approved plan's `files_to_change` does not list, as a count and as a share of edited files. Runs whose plan has no such list are left out. |
 | Reverted file edits | Applied files with no change left in the final diff, because they were changed and then changed back. |
-| Cost | Tokens times the price for the run's model in [config/model_prices.json](../config/model_prices.json) (or `LLM_PRICE_*`), including cache reads and writes. Reported as the total, the mean per run, and the **cost per resolved task**: total cost of all finished runs, failed ones included, divided by resolved runs. |
+| Cost | Each call's tokens times the price of the model that call used, from [config/model_prices.json](../config/model_prices.json) (or `LLM_PRICE_*` for `ANTHROPIC_MODEL`), including cache reads and writes and, for models priced by prompt length, the higher prices over the threshold. Reported as the total, the mean per run, and the **cost per resolved task**: total cost of all finished runs, failed ones included, divided by resolved runs. |
+| Cost by step | Calls, cost and share of the total cost for each kind of model call (`plan_searches`, `plan`, `investigate`, `propose`, `draft_publication`, `check_publication`, `summary`). |
+| Cache hit rate | Prompt tokens read from the cache, divided by all prompt tokens (uncached input, cache reads and cache writes). |
+| PR text corrected by the summary check | Of the finished runs whose drafted pull request text was checked, how many had something corrected. |
 | Latency | p50, p95 and max of model-call latency by purpose (plan, investigate, propose, …), tool-call duration by tool, and step duration. Percentiles use the nearest-rank method. |
 
-Results are grouped by model, so runs with different `ANTHROPIC_MODEL` values can be compared in
-one report.
+Results are grouped by setup: the main model plus any per-step models and effort levels, and
+whether the summary check was on. Each run records its setup when it starts, so runs with
+different settings can be compared in one report. Runs recorded before setups were (the
+2026-11-15 experiment) are grouped by their model.
 
 ## Running the experiments
 

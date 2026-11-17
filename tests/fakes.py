@@ -38,7 +38,7 @@ class ScriptedProvider(LLMProvider):
     every call, or a list of exceptions raised one per call before succeeding.
     """
 
-    model = "scripted-model"
+    model = "scripted-model"  # replaced by the configured model when a runner uses it (see as_configured)
 
     def __init__(
         self,
@@ -58,11 +58,12 @@ class ScriptedProvider(LLMProvider):
         self.tools_offered: dict[str, set[str]] = {}
         self.calls: list[str] = []
         self._n = 0
+        self.models_by_purpose: dict[str, str] = {}
 
     def _emit(self, purpose: str, error: Exception | None = None) -> None:
         if self.metrics_sink is None:
             return
-        meta: dict[str, Any] = {"purpose": purpose, "model": self.model, "latency_ms": 1}
+        meta: dict[str, Any] = {"purpose": purpose, "model": self.models_by_purpose.get(purpose) or self.model, "latency_ms": 1}
         if error is None:
             meta.update(input_tokens=self.usage[0], output_tokens=self.usage[1], cache_read_tokens=0, cache_write_tokens=0, stop_reason="end_turn")
         else:
@@ -120,6 +121,17 @@ class ScriptedProvider(LLMProvider):
 
     def tool_results_message(self, results: list[ToolResult]) -> Message:
         return {"role": "user", "content": [{"type": "tool_result", "tool_use_id": r.tool_call_id, "content": r.content, "is_error": r.is_error} for r in results]}
+
+
+def as_configured(provider: Any, settings: Settings) -> Any:
+    """The scripted turns stand in for the configured model, so calls are logged and priced as that model.
+
+    Per-step models (ANTHROPIC_MODEL_<STEP>) are honoured the same way the real provider does it.
+    """
+    if isinstance(provider, ScriptedProvider):
+        provider.model = settings.anthropic_model or ScriptedProvider.model
+        provider.models_by_purpose = settings.models_by_purpose
+    return provider
 
 
 class LocalPytestRunner:

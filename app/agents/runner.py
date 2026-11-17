@@ -34,7 +34,7 @@ from app.llm.anthropic_provider import AnthropicProvider
 from app.llm.base import LLMProvider
 from app.llm.reliable import ReliableProvider
 from app.mcp.client import MCPHub, stdio_server_configs, tool_retry_policy
-from app.reliability.budget import BudgetLimits, Pricing, PricingError, RunBudget, load_pricing
+from app.reliability.budget import BudgetLimits, PriceBook, PricingError, RunBudget
 from app.reliability.failures import CodedError, failure_from_exception, make_failure
 from app.reliability.retry import RetryPolicy
 from app.storage.audit import AuditStore
@@ -93,9 +93,9 @@ class AgentRunner:
         s = self.settings
         return BudgetLimits(max_cost_usd=s.max_task_cost_usd or None, max_llm_calls=s.max_llm_calls_per_run or None, max_tool_calls=s.max_tool_calls_per_run or None)
 
-    def pricing(self) -> Pricing | None:
+    def pricing(self) -> PriceBook:
         s = self.settings
-        return load_pricing(s.anthropic_model, s.model_prices_file, s.price_overrides)
+        return PriceBook(s.anthropic_model, s.model_prices_file, s.price_overrides)
 
     def budget(self, run_id: str) -> RunBudget:
         """Raises PricingError (malformed price file) or CodedError (no model configured, or a cost limit without a price)."""
@@ -103,17 +103,20 @@ class AgentRunner:
             # The model name is never hardcoded; it comes only from ANTHROPIC_MODEL.
             raise CodedError("ANTHROPIC_MODEL is not set, so there is no model to run", code="model_not_configured")
         pricing = self.pricing()
-        if self.settings.max_task_cost_usd and pricing is None:
+        missing = pricing.missing(self.settings.models_in_use)
+        if self.settings.max_task_cost_usd and missing:
+            names = ", ".join(repr(m) for m in missing)
             raise CodedError(
-                f"MAX_TASK_COST_USD is {self.settings.max_task_cost_usd:g} but there is no price for model {self.settings.anthropic_model!r}, "
+                f"MAX_TASK_COST_USD is {self.settings.max_task_cost_usd:g} but there is no price for model {names}, "
                 "so the cost limit cannot be enforced",
                 code="pricing_unknown",
             )
         return RunBudget(self.audit, run_id, self.limits(), pricing)
 
     def _usage(self, run_id: str) -> dict[str, Any]:
+        pricing: PriceBook | None = self.pricing()
         try:
-            pricing = self.pricing()
+            pricing.get(None)  # type: ignore[union-attr]
         except PricingError:
             pricing = None
         return RunBudget(self.audit, run_id, self.limits(), pricing).snapshot()
@@ -129,7 +132,7 @@ class AgentRunner:
     def create_run(self, issue_number: int, instructions: str = "") -> str:
         if issue_number < 1:
             raise ValueError("issue_number must be a positive integer")
-        return self.audit.create_run(issue_number, self.settings.github_repository, self.settings.anthropic_model, instructions)
+        return self.audit.create_run(issue_number, self.settings.github_repository, self.settings.anthropic_model, instructions, setup=self.settings.model_setup())
 
     async def execute(self, run_id: str, issue_number: int, instructions: str = "") -> dict[str, Any]:
         initial = {

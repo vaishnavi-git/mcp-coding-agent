@@ -81,10 +81,20 @@ def run_metrics(record: RunRecord) -> dict[str, Any]:
     started, ended = parse_time(run.get("created_at")), parse_time(run.get("updated_at"))
     timeline = state.get("timeline") or []
 
+    by_step_cost: dict[str, float | None] = {}
+    by_step_calls: dict[str, int] = defaultdict(int)
+    for c in successful_llm:
+        purpose = c.get("purpose") or "?"
+        by_step_calls[purpose] += 1
+        known = by_step_cost.get(purpose, 0.0)
+        by_step_cost[purpose] = None if known is None or c.get("cost_usd") is None else known + c["cost_usd"]
+    check = (state.get("publication_draft") or {}).get("summary_check") or {}
+
     return {
         "run_id": run["id"],
         "issue": run["issue_number"],
         "model": run.get("model") or "unknown",
+        "setup": describe_setup(run.get("setup"), run.get("model")),
         "status": status,
         "finished": finished,
         "failure_code": (run.get("failure") or {}).get("code") if isinstance(run.get("failure"), dict) else None,
@@ -107,6 +117,10 @@ def run_metrics(record: RunRecord) -> dict[str, Any]:
         "input_tokens": sum(c.get("input_tokens") or 0 for c in successful_llm),
         "output_tokens": sum(c.get("output_tokens") or 0 for c in successful_llm),
         "cache_read_tokens": sum(c.get("cache_read_tokens") or 0 for c in successful_llm),
+        "cache_write_tokens": sum(c.get("cache_write_tokens") or 0 for c in successful_llm),
+        "calls_by_step": dict(sorted(by_step_calls.items())),
+        "cost_by_step": dict(sorted(by_step_cost.items())),
+        "summary_check": check.get("status"),
         "cost_usd": sum(c.get("cost_usd") or 0.0 for c in successful_llm) if cost_known else None,
         "wall_seconds": (ended - started).total_seconds() if finished and started and ended else None,
         "agent_seconds": sum(e.get("duration_ms") or 0 for e in timeline) / 1000 if timeline else None,
@@ -119,6 +133,32 @@ def run_metrics(record: RunRecord) -> dict[str, Any]:
         "tool_duration_ms": [(c["tool"], c["duration_ms"]) for c in record.tool_calls if c.get("duration_ms") is not None],
         "step_duration_ms": [(e["step"], e["duration_ms"]) for e in timeline if e.get("duration_ms") is not None],
     }
+
+
+def describe_setup(setup: dict[str, Any] | None, model: str | None = None) -> str:
+    """A short label for how a run was configured: the main model, then any per-step changes in brackets."""
+    if not setup:
+        return model or "unknown"
+    extras = [f"effort {setup['effort']}"] if setup.get("effort") else []
+    extras += [f"{step}: {name}" for step, name in (setup.get("models_by_step") or {}).items()]
+    extras += [f"{step} effort {level}" for step, level in (setup.get("effort_by_step") or {}).items()]
+    if setup.get("check_pr_summary") is False:
+        extras.append("no summary check")
+    name = setup.get("model") or model or "unknown"
+    return f"{name} ({', '.join(extras)})" if extras else name
+
+
+def _steps(rows: list[dict[str, Any]], total_cost: float | None) -> dict[str, dict[str, Any]]:
+    steps: dict[str, dict[str, Any]] = {}
+    for r in rows:
+        for purpose, calls in r["calls_by_step"].items():
+            entry = steps.setdefault(purpose, {"calls": 0, "cost_usd": 0.0})
+            entry["calls"] += calls
+            cost = r["cost_by_step"].get(purpose)
+            entry["cost_usd"] = None if entry["cost_usd"] is None or cost is None else entry["cost_usd"] + cost
+    for entry in steps.values():
+        entry["share"] = ratio(entry["cost_usd"], total_cost) if entry["cost_usd"] is not None and total_cost else None
+    return dict(sorted(steps.items(), key=lambda item: -(item[1]["cost_usd"] or 0)))
 
 
 def _distribution(pairs: Iterable[tuple[str, float]]) -> dict[str, dict[str, Any]]:
@@ -139,6 +179,8 @@ def _aggregate(rows: list[dict[str, Any]]) -> dict[str, Any]:
     costs = [r["cost_usd"] for r in done]
     cost_known = bool(done) and all(c is not None for c in costs)
     total_cost = sum(costs) if cost_known else None  # type: ignore[arg-type]
+    prompt_tokens = sum(r["input_tokens"] + r["cache_read_tokens"] + r["cache_write_tokens"] for r in done)
+    checked = [r for r in done if r["summary_check"] in ("ok", "corrected")]
     return {
         "runs": len(rows),
         "finished": len(done),
@@ -170,6 +212,10 @@ def _aggregate(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "total_cost_usd": total_cost,
         "mean_cost_per_run_usd": total_cost / len(done) if total_cost is not None else None,
         "cost_per_resolved_task_usd": total_cost / len(resolved) if total_cost is not None and resolved else None,
+        "cache_hit_rate": ratio(sum(r["cache_read_tokens"] for r in done), prompt_tokens),
+        "cost_by_step": _steps(done, total_cost),
+        "summary_checks": len(checked),
+        "summary_checks_corrected": sum(1 for r in checked if r["summary_check"] == "corrected"),
         "llm_latency_ms": _distribution(p for r in done for p in r["llm_latency_ms"]),
         "tool_duration_ms": _distribution(p for r in done for p in r["tool_duration_ms"]),
         "step_duration_ms": _distribution(p for r in done for p in r["step_duration_ms"]),
@@ -184,8 +230,14 @@ def _count(values: Iterable[str]) -> dict[str, int]:
 
 
 def summarize(rows: list[dict[str, Any]]) -> dict[str, Any]:
-    """Aggregate per-run metrics: overall and per model."""
+    """Aggregate per-run metrics: overall, per main model, and per setup (models and effort per step)."""
     by_model: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    by_setup: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
         by_model[row["model"]].append(row)
-    return {"overall": _aggregate(rows), "by_model": {model: _aggregate(group) for model, group in sorted(by_model.items())}}
+        by_setup[row["setup"]].append(row)
+    return {
+        "overall": _aggregate(rows),
+        "by_model": {model: _aggregate(group) for model, group in sorted(by_model.items())},
+        "by_setup": {setup: _aggregate(group) for setup, group in sorted(by_setup.items())},
+    }

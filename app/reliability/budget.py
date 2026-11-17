@@ -4,8 +4,9 @@ Usage is read from the audit database rather than kept in memory, so a run's
 budget covers every invocation of that run (start, each approval, each retry)
 and survives restarts of the API process.
 
-Cost = tokens x the configured model's price. Prices live in a JSON file
-(``config/model_prices.json``) or in environment variables, never in code.
+Cost = tokens x the price of the model each call actually used (steps can use
+different models). Prices live in a JSON file (``config/model_prices.json``) or in
+environment variables, never in code.
 """
 
 from __future__ import annotations
@@ -41,7 +42,11 @@ def usd(amount: float) -> str:
 
 @dataclass(frozen=True)
 class Pricing:
-    """USD per million tokens for one model."""
+    """USD per million tokens for one model.
+
+    ``long_context`` is ``(threshold, pricing)`` for models priced by prompt length: a call whose
+    prompt (input + cache read + cache write tokens) is over the threshold pays those prices.
+    """
 
     model: str
     input: float
@@ -49,8 +54,11 @@ class Pricing:
     cache_read: float
     cache_write: float
     source: str
+    long_context: tuple[int, Pricing] | None = None
 
     def cost(self, input_tokens: int = 0, output_tokens: int = 0, cache_read_tokens: int = 0, cache_write_tokens: int = 0) -> float:
+        if self.long_context is not None and input_tokens + cache_read_tokens + cache_write_tokens > self.long_context[0]:
+            return self.long_context[1].cost(input_tokens, output_tokens, cache_read_tokens, cache_write_tokens)
         return (
             input_tokens * self.input
             + output_tokens * self.output
@@ -103,16 +111,52 @@ def load_pricing(model: str, prices_file: Path | None, overrides: dict[str, floa
         return None
     if not isinstance(entry, dict) or "input" not in entry or "output" not in entry:
         raise PricingError(f"{prices_file}: model {model!r} needs 'input' and 'output' prices")
-    where = f"{prices_file.name}: {model}"
+    return _entry_pricing(model, entry, f"{prices_file.name}: {model}", prices_file.name)
+
+
+def _entry_pricing(model: str, entry: dict[str, Any], where: str, source: str) -> Pricing:
     inp = _price(entry["input"], f"{where}.input")
+    long_context = None
+    if "long_context" in entry:
+        tier = entry["long_context"]
+        if not isinstance(tier, dict) or "input" not in tier or "output" not in tier or not isinstance(tier.get("over_input_tokens"), int):
+            raise PricingError(f"{where}.long_context needs 'over_input_tokens' (an integer), 'input' and 'output'")
+        long_context = (tier["over_input_tokens"], _entry_pricing(model, {k: v for k, v in tier.items() if k != "over_input_tokens"}, f"{where}.long_context", source))
     return Pricing(
         model,
         inp,
         _price(entry["output"], f"{where}.output"),
         _price(entry["cache_read"], f"{where}.cache_read") if "cache_read" in entry else inp * CACHE_READ_FACTOR,
         _price(entry["cache_write"], f"{where}.cache_write") if "cache_write" in entry else inp * CACHE_WRITE_FACTOR,
-        prices_file.name,
+        source,
+        long_context,
     )
+
+
+class PriceBook:
+    """Prices for every model a run may use, looked up per call by the model the call reports.
+
+    The LLM_PRICE_* environment overrides apply to the main model (ANTHROPIC_MODEL) only.
+    """
+
+    def __init__(self, default_model: str, prices_file: Path | None, overrides: dict[str, float | None] | None = None) -> None:
+        self.default_model = default_model
+        self.prices_file = prices_file
+        self.overrides = overrides or {}
+        self._cache: dict[str, Pricing | None] = {}
+
+    def get(self, model: str | None) -> Pricing | None:
+        model = model or self.default_model
+        if model not in self._cache:
+            self._cache[model] = load_pricing(model, self.prices_file, self.overrides if model == self.default_model else None)
+        return self._cache[model]
+
+    def missing(self, models: list[str]) -> list[str]:
+        return [m for m in models if self.get(m) is None]
+
+    def cost_of(self, meta: dict[str, Any]) -> float | None:
+        pricing = self.get(meta.get("model"))
+        return pricing.cost_of(meta) if pricing is not None else None
 
 
 @dataclass(frozen=True)
@@ -144,7 +188,9 @@ class Usage:
 
 
 class RunBudget:
-    def __init__(self, audit: AuditStore, run_id: str, limits: BudgetLimits, pricing: Pricing | None) -> None:
+    """``pricing`` is a PriceBook (each call priced at its own model) or a single Pricing for every call."""
+
+    def __init__(self, audit: AuditStore, run_id: str, limits: BudgetLimits, pricing: Pricing | PriceBook | None) -> None:
         self.audit = audit
         self.run_id = run_id
         self.limits = limits
@@ -157,6 +203,9 @@ class RunBudget:
         if self.pricing is None or meta.get("error"):
             return None
         return self.pricing.cost_of(meta)
+
+    def _main_pricing(self) -> Pricing | None:
+        return self.pricing.get(None) if isinstance(self.pricing, PriceBook) else self.pricing
 
     def check_llm(self, purpose: str) -> None:
         """Raise BudgetExceeded if no further model call may start."""
@@ -209,5 +258,5 @@ class RunBudget:
                 "llm_calls": max(0, limits["max_llm_calls"] - used.llm_calls) if limits["max_llm_calls"] else None,
                 "tool_calls": max(0, limits["max_tool_calls"] - used.tool_calls) if limits["max_tool_calls"] else None,
             },
-            "pricing": {"model": self.pricing.model, "source": self.pricing.source} if self.pricing else None,
+            "pricing": {"model": main.model, "source": main.source} if (main := self._main_pricing()) else None,
         }

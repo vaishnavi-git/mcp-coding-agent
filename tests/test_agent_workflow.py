@@ -20,7 +20,7 @@ from app.llm.base import LLMRateLimitError
 from app.mcp.client import MCPHub, Risk
 from app.mcp.git_utils import run_git
 from app.storage.audit import AuditStore
-from tests.fakes import FakeRunner, LocalPytestRunner, ScriptedProvider, inprocess_hub_factory, inprocess_servers
+from tests.fakes import FakeRunner, LocalPytestRunner, ScriptedProvider, as_configured, inprocess_hub_factory, inprocess_servers
 
 pytestmark = pytest.mark.anyio
 
@@ -88,7 +88,7 @@ def make_runner(settings, provider, sandbox_runner=None) -> tuple[AgentRunner, A
     runner = AgentRunner(
         settings,
         audit=audit,
-        provider_factory=lambda run_id: provider,
+        provider_factory=lambda run_id: as_configured(provider, settings),
         hub_factory=inprocess_hub_factory(settings, sandbox_runner or LocalPytestRunner(), audit),
     )
     return runner, audit
