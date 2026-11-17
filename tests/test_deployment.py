@@ -57,7 +57,9 @@ def test_sandbox_work_dir_has_the_same_path_on_both_sides() -> None:
 def test_images_run_as_non_root_with_pinned_bases() -> None:
     app_image = dockerfile_lines(PROJECT_ROOT / "Dockerfile")
     sandbox_image = dockerfile_lines(PROJECT_ROOT / "sandbox" / "Dockerfile")
-    for lines, user in ((app_image, "agent"), (sandbox_image, "runner")):
+    js_image = dockerfile_lines(PROJECT_ROOT / "sandbox" / "javascript" / "Dockerfile")
+    java_image = dockerfile_lines(PROJECT_ROOT / "sandbox" / "java" / "Dockerfile")
+    for lines, user in ((app_image, "agent"), (sandbox_image, "runner"), (js_image, "node"), (java_image, "runner")):
         users = [line for line in lines if line.startswith("USER ")]
         assert users and users[-1] == f"USER {user}"
         for line in lines:
@@ -93,7 +95,8 @@ def test_ci_workflow_lints_and_runs_every_test_with_docker() -> None:
     steps = {job: [s.get("run") or s.get("uses") for s in spec["steps"]] for job, spec in workflow["jobs"].items()}
     assert any("ruff check app scripts tests" in str(s) for s in steps["lint"])
     test_steps = " ".join(str(s) for s in steps["test"])
-    assert "docker build -t mcp-agent-sandbox:latest sandbox/" in test_steps  # so the real-Docker test runs, not skips
+    for image, context in (("mcp-agent-sandbox", "sandbox/"), ("mcp-agent-sandbox-js", "sandbox/javascript/"), ("mcp-agent-sandbox-java", "sandbox/java/")):
+        assert f"docker build -t {image}:latest {context}" in test_steps  # so the real-Docker tests run, not skip
     pytest_step = next(str(s) for s in steps["test"] if str(s).startswith("pytest"))
     assert "--cov=app" in pytest_step and " -m " not in pytest_step and " -k " not in pytest_step  # the whole suite
     for spec in workflow["jobs"].values():

@@ -37,8 +37,14 @@ jobs:
           cache: pip
       - name: Install
         run: pip install -e ".[dev]"
-      - name: Build the test sandbox image
-        run: docker build -t mcp-agent-sandbox:latest sandbox/
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build the test sandbox images
+        run: |
+          docker build -t mcp-agent-sandbox:latest sandbox/
+          docker build -t mcp-agent-sandbox-js:latest sandbox/javascript/
+          docker build -t mcp-agent-sandbox-java:latest sandbox/java/
       - name: Run the test suite
         # No API key or network access to GitHub is needed: the model is scripted and GitHub is mocked.
         run: pytest -o addopts="-q --strict-markers" -rs --cov=app --cov-report=term
