@@ -5,6 +5,9 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import httpx2
@@ -162,3 +165,17 @@ async def test_reports_show_cost_by_step_cache_hits_and_setups(settings) -> None
     assert "## Cost by step" in text and "| `investigate` |" in text
     assert "| Cache hit rate (prompt tokens read from cache) | 0.0% |" in text.replace(" | 0.0% | 0.0%", "")
     assert "`claude-sonnet-5 (investigate: claude-haiku-5-5)`" in text and "| PR text corrected by the summary check | 0 of 2 |" in text
+    investigate_row = next(line for line in text.splitlines() if line.startswith("| `investigate` |"))
+    assert investigate_row.count(" calls)") == 3  # all runs, then one column per setup
+
+    # scripts/evaluate.py reports several benchmarks together
+    batches = []
+    for name, run_id in (("first", plain), ("second", mixed)):
+        batch = settings.data_dir / "benchmarks" / f"{name}.json"
+        batch.parent.mkdir(parents=True, exist_ok=True)
+        batch.write_text(json.dumps({"runs": [{"run_id": run_id}]}))
+        batches += ["--batch", str(batch)]
+    env = {**os.environ, "DATA_DIR": str(settings.data_dir), "PYTHONPATH": str(PROJECT_ROOT)}
+    proc = subprocess.run([sys.executable, "scripts/evaluate.py", *batches], cwd=PROJECT_ROOT, env=env, capture_output=True, text=True, timeout=120)
+    assert proc.returncode == 0, proc.stderr
+    assert "Selection: benchmarks first, second." in proc.stdout and "| Runs (finished / still open) | 2 / 0 |" in proc.stdout

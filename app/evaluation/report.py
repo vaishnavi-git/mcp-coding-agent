@@ -86,11 +86,20 @@ def render_markdown(summary: dict[str, Any], rows: list[dict[str, Any]], *, sour
 
     overall = summary["overall"]
     out += ["## Cost by step", ""]
-    if overall["cost_by_step"]:
+    if not overall["cost_by_step"]:
+        out.append("No model calls.")
+    elif len(groups) == 1:
         out += ["| Model call | Calls | Cost | Share of cost |", "|---|---|---|---|"]
         out += [f"| `{name}` | {s['calls']} | {usd(s['cost_usd'])} | {pct(s['share'])} |" for name, s in overall["cost_by_step"].items()]
     else:
-        out.append("No model calls.")
+        out += ["Cost of each kind of model call, with its share of that group's cost and the number of calls.", ""]
+        out += ["| Model call | " + " | ".join(name for name, _ in groups) + " |", "|---" * (len(groups) + 1) + "|"]
+        for step in overall["cost_by_step"]:
+            cells = []
+            for _, agg in groups:
+                s = agg["cost_by_step"].get(step)
+                cells.append("-" if s is None else f"{usd(s['cost_usd'])} ({pct(s['share'])}, {s['calls']} calls)")
+            out.append(f"| `{step}` | " + " | ".join(cells) + " |")
     out.append("")
     for title, key in (("Model call latency by purpose", "llm_latency_ms"), ("Tool call duration by tool", "tool_duration_ms"), ("Workflow step duration", "step_duration_ms")):
         dist = overall[key]
