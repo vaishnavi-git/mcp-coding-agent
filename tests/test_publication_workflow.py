@@ -229,3 +229,16 @@ async def test_the_check_can_be_turned_off(settings) -> None:
     _, _, view = await to_publication(dataclasses.replace(settings, check_pr_summary=False), scripted)
     assert "check_publication" not in scripted.calls
     assert view["pending_approval"]["summary_check"] is None
+
+
+def test_the_replay_script_recovers_the_first_draft() -> None:
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+    from replay_summary_check import first_draft
+
+    original = {"pr_title": "T", "commit_message": "M", "summary": "S", "risks": ["R"]}
+    assert first_draft({"summary_check": {"status": "corrected", "original": original}, "pr_body": "ignored"}) == original
+    body = compose_pr_body("The summary.", ["First risk.", "Second risk."], [("a.py", 1, 0)], [], 42)
+    unchecked = {"summary_check": {"status": "ok", "problems": []}, "pr_title": "Title", "commit_message": "Subject\n\nRefs #42", "pr_body": body}
+    assert first_draft(unchecked) == {"pr_title": "Title", "commit_message": "Subject", "summary": "The summary.", "risks": ["First risk.", "Second risk."]}

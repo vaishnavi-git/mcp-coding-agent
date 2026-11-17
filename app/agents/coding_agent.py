@@ -216,6 +216,43 @@ def _references(state: AgentState, limit: int = 10) -> list[dict[str, Any]]:
     return list(seen.values())[:limit]
 
 
+async def check_publication(provider: LLMProvider, state: dict[str, Any], draft: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Fact-check the drafted text against the issue, the approved plan, the diff and the test runs.
+
+    Returns the draft to use and a record for the reviewer: what was wrong, and the original
+    text when something was corrected. If the check itself fails, the draft is used as it was.
+    """
+    original = {k: draft.get(k) for k in CHECKED_FIELDS}
+    tests = "\n".join(f"- attempt {r['attempt']}: {r['status']} ({r['summary']})" for r in state.get("test_runs", [])) or "(none)"
+    plan = {k: v for k, v in (state.get("plan") or {}).items() if k in ("summary", "steps", "acceptance_criteria", "files_to_change")}
+    user = prompts.PUBLISH_CHECK_USER.format(
+        issue=state["issue"],
+        plan=_clip(json.dumps(plan, indent=2), 4000) if plan else "(no plan recorded)",
+        diff=_clip(state.get("repo_diff") or "", 15000),
+        tests=tests,
+        draft=json.dumps(original, indent=2),
+    )
+    try:
+        checked = await asyncio.to_thread(provider.generate_json, prompts.PUBLISH_CHECK_SYSTEM, user, prompts.PUBLISH_CHECK_SCHEMA, purpose="check_publication")
+    except LLMError as exc:
+        return draft, {"status": "failed", "message": str(exc)[:500], "problems": []}
+    problems = [
+        {"field": str(p.get("field") or ""), "claim": str(p.get("claim") or "").strip(), "correction": str(p.get("correction") or "").strip()}
+        for p in checked.get("problems") or []
+        if isinstance(p, dict) and (p.get("claim") or p.get("correction"))
+    ][:20]
+    if not problems:
+        return draft, {"status": "ok", "problems": []}
+    corrected = dict(draft)
+    for key in CHECKED_FIELDS:
+        value = checked.get(key)
+        if key == "risks" and isinstance(value, list):
+            corrected[key] = [str(r) for r in value if str(r).strip()]
+        elif isinstance(value, str) and value.strip():
+            corrected[key] = value
+    return corrected, {"status": "corrected", "problems": problems, "original": original}
+
+
 def build_graph(deps: AgentDeps | None) -> StateGraph:
     """Build the workflow. ``deps`` may be None when the graph is only used to read state."""
 
@@ -624,7 +661,7 @@ def build_graph(deps: AgentDeps | None) -> StateGraph:
         draft = await asyncio.to_thread(deps_.provider.generate_json, prompts.PUBLISH_SYSTEM, user, prompts.PUBLISH_SCHEMA, purpose="draft_publication")
         check: dict[str, Any] | None = None
         if deps_.settings.check_pr_summary:
-            draft, check = await _check_publication(deps_, state, draft)
+            draft, check = await check_publication(deps_.provider, state, draft)
         title_line = (state.get("issue") or "").splitlines()[0].split(":", 1)[-1].strip() if state.get("issue") else ""
         pr_title = " ".join(str(draft.get("pr_title") or "").split())[:120] or f"Fix #{number}: {title_line}"[:120]
         commit_message = str(draft.get("commit_message") or "").strip() or pr_title
@@ -648,42 +685,6 @@ def build_graph(deps: AgentDeps | None) -> StateGraph:
             },
             "publication_feedback": "",
         }
-
-    async def _check_publication(deps_: AgentDeps, state: AgentState, draft: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-        """Fact-check the drafted text against the issue, the approved plan, the diff and the test runs.
-
-        Returns the draft to use and a record for the reviewer: what was wrong, and the original
-        text when something was corrected. If the check itself fails, the draft is used as it was.
-        """
-        original = {k: draft.get(k) for k in CHECKED_FIELDS}
-        tests = "\n".join(f"- attempt {r['attempt']}: {r['status']} ({r['summary']})" for r in state.get("test_runs", [])) or "(none)"
-        plan = {k: v for k, v in (state.get("plan") or {}).items() if k in ("summary", "steps", "acceptance_criteria", "files_to_change")}
-        user = prompts.PUBLISH_CHECK_USER.format(
-            issue=state["issue"],
-            plan=_clip(json.dumps(plan, indent=2), 4000) if plan else "(no plan recorded)",
-            diff=_clip(state.get("repo_diff") or "", 15000),
-            tests=tests,
-            draft=json.dumps(original, indent=2),
-        )
-        try:
-            checked = await asyncio.to_thread(deps_.provider.generate_json, prompts.PUBLISH_CHECK_SYSTEM, user, prompts.PUBLISH_CHECK_SCHEMA, purpose="check_publication")
-        except LLMError as exc:
-            return draft, {"status": "failed", "message": str(exc)[:500], "problems": []}
-        problems = [
-            {"field": str(p.get("field") or ""), "claim": str(p.get("claim") or "").strip(), "correction": str(p.get("correction") or "").strip()}
-            for p in checked.get("problems") or []
-            if isinstance(p, dict) and (p.get("claim") or p.get("correction"))
-        ][:20]
-        if not problems:
-            return draft, {"status": "ok", "problems": []}
-        corrected = dict(draft)
-        for key in CHECKED_FIELDS:
-            value = checked.get(key)
-            if key == "risks" and isinstance(value, list):
-                corrected[key] = [str(r) for r in value if str(r).strip()]
-            elif isinstance(value, str) and value.strip():
-                corrected[key] = value
-        return corrected, {"status": "corrected", "problems": problems, "original": original}
 
     async def await_publication(state: AgentState) -> dict[str, Any]:
         draft = state["publication_draft"]
