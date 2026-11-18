@@ -96,6 +96,7 @@ SPEC_MATRIX: dict[str, list[str]] = {
         "test_access_control.py::test_patches_cannot_create_or_change_protected_files",
         "test_access_control.py::test_git_diff_and_commits_leave_protected_files_out",
         "test_access_control.py::test_sandbox_copy_leaves_protected_files_and_outside_links_out",
+        "test_access_control.py::test_hard_links_to_files_outside_the_repository_are_blocked",
         "test_access_control.py::test_code_running_in_the_sandbox_cannot_read_protected_files",
         "test_security.py::test_forbidden_files_are_rejected",
         "test_security.py::test_writable_paths_are_enforced",

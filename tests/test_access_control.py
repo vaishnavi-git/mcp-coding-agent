@@ -230,3 +230,34 @@ async def test_code_running_in_the_sandbox_cannot_read_protected_files(settings,
     async with MCPHub(inprocess_servers(settings, LocalPytestRunner())) as hub:
         outcome = await hub.call("run_tests", {"test_command": "pytest -q -p no:cacheprovider tests/test_probe.py"})
     assert outcome.text.startswith("status: PASSED"), outcome.text
+
+
+async def test_hard_links_to_files_outside_the_repository_are_blocked(settings, world, tmp_path: Path) -> None:
+    repo, outside = world
+    secret = outside / "secret.txt"
+    os.link(secret, repo / "authkit" / "notes.txt")  # a new file that is really the outside secret
+    tracked = repo / "authkit" / "__init__.py"
+    tracked.unlink()
+    os.link(secret, tracked)  # a tracked file replaced by the same secret
+    before = secret.read_bytes()
+    async with MCPHub(inprocess_servers(settings, FakeRunner())) as hub:
+        for rel in ("authkit/notes.txt", "authkit/__init__.py"):
+            read = await hub.call("read_repository_file", {"path": rel})
+            assert read.is_error and "hard link" in read.text and not leaked(read.text), read.text
+            patch = f"--- a/{rel}\n+++ b/{rel}\n@@ -1 +1 @@\n-{OUTSIDE_SECRET}\n+overwritten\n"
+            for tool in ("propose_patch", "apply_patch"):
+                outcome = await hub.call(tool, {"path": rel, "patch": patch})
+                assert outcome.is_error and "protected" in outcome.text, (tool, rel, outcome.text)
+        found = await hub.call("search_repository", {"query": "7f3a"})  # part of the secret, so the echoed query isn't a leak
+        assert not leaked(found.text) and found.text.startswith("No matches"), found.text
+        diff = await hub.call("get_git_diff", {})
+        assert not diff.is_error and not leaked(diff.text), diff.text
+        assert "(changes to protected file not shown: authkit/__init__.py)" in diff.text
+        assert "(new protected file not shown: authkit/notes.txt)" in diff.text
+        await hub.call("create_branch", {"branch_name": "agent/hard-link-check"})
+        committed = await hub.call("commit_changes", {"message": "Try to commit the links"})
+    assert OUTSIDE_SECRET not in run_git(repo, "show", "HEAD") and (committed.is_error or "notes.txt" not in committed.text.split('"files"')[1].split("]")[0])
+    assert secret.read_bytes() == before  # never written through either name
+    copy = tmp_path / "sandbox-copy"
+    copy_repository(repo, copy)
+    assert not (copy / "authkit" / "notes.txt").exists() and not (copy / "authkit" / "__init__.py").exists()

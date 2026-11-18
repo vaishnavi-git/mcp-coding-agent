@@ -19,7 +19,7 @@ from mcp.types import ToolAnnotations
 
 from .git_utils import GitError, is_git_repo, run_git
 from .patching import PatchError, apply_to_text, diff_stats, parse_patch, unified_diff
-from .security import PathGuard, PathViolation, looks_binary
+from .security import PathGuard, PathViolation, has_other_names, looks_binary
 
 MAX_READ_CHARS = 200_000
 MAX_SEARCH_FILE_BYTES = 1_000_000
@@ -205,7 +205,7 @@ def build_server(repo_path: str | Path, writable_paths: tuple[str, ...] = (), al
             untracked = run_git(root, "ls-files", "--others", "--exclude-standard").splitlines()
         except GitError as exc:
             raise ToolError(str(exc)) from exc
-        parts = [tracked] if tracked.strip() else []
+        parts = [_hide_protected_changes(tracked, guard)] if tracked.strip() else []
         for rel in untracked:
             if guard.is_forbidden(rel):
                 parts.append(f"(new protected file not shown: {rel})\n")
@@ -229,6 +229,30 @@ def build_server(repo_path: str | Path, writable_paths: tuple[str, ...] = (), al
         return text
 
     return server
+
+
+_FILE_HEADER = re.compile(r"^diff --git a/(.+?) b/(.+)$")
+
+
+def _hide_protected_changes(diff: str, guard: PathGuard) -> str:
+    """Drop the part of a ``git diff`` for any protected file, or any file with extra hard links.
+
+    A tracked file can be protected (a committed .env) or be replaced after checkout by a hard
+    link to a file elsewhere; either way its new content must not reach the model.
+    """
+    out: list[str] = []
+    hiding = False
+    for line in diff.splitlines(keepends=True):
+        match = _FILE_HEADER.match(line.rstrip("\n"))
+        if match:
+            rel = match.group(2)
+            hiding = guard.is_forbidden(rel) or has_other_names(guard.root / rel)
+            if hiding:
+                out.append(f"(changes to protected file not shown: {rel})\n")
+                continue
+        if not hiding:
+            out.append(line)
+    return "".join(out)
 
 
 def main(argv: list[str] | None = None) -> None:

@@ -17,7 +17,7 @@ uses the local `node` in place of Docker and is skipped if there isn't one.
 
 ## Last full run
 
-633 tests. With Docker running and the three sandbox images built, all 633 pass; this was checked
+634 tests. With Docker running and the three sandbox images built, all 634 pass; this was checked
 on macOS on Apple silicon with Docker Desktop (engine 29.9.3). Without Docker, the four
 real-Docker tests are skipped. A run takes about two and a half minutes on a laptop.
 
@@ -27,7 +27,7 @@ real-Docker tests are skipped. A run takes about two and a half minutes on a lap
 | Valid tool calls | `valid_calls` | 9 |
 | Invalid arguments | `invalid_args` | 36 |
 | Path traversal attempts | `path_traversal` | 45 |
-| Unauthorized file access | `unauthorized_access` | 55 |
+| Unauthorized file access | `unauthorized_access` | 56 |
 | Dangerous command rejection | `dangerous_commands` | 124 |
 | Test timeout handling | `timeouts` | 7 |
 | Failed test recovery | `recovery` | 10 |

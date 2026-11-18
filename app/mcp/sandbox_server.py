@@ -27,7 +27,7 @@ from mcp.types import ToolAnnotations
 from app.languages import runner_for
 from app.reliability.test_results import parse_output
 
-from .security import CommandRejected, PathGuard, is_protected, validate_test_command
+from .security import CommandRejected, PathGuard, has_other_names, is_protected, validate_test_command
 
 # Runs code, but only in a throwaway container on a copy of the repo with no
 # network: neither the workspace nor the outside world changes.
@@ -75,8 +75,8 @@ def copy_repository(src: Path, dest: Path) -> None:
             skipped.add("target")  # Maven build output
         for name in names:
             path = Path(directory) / name
-            if is_protected(path.relative_to(src).as_posix()):
-                skipped.add(name)
+            if is_protected(path.relative_to(src).as_posix()) or (not path.is_symlink() and has_other_names(path)):
+                skipped.add(name)  # hard links may be other names for files outside the repository
                 continue
             if path.is_symlink():
                 target = path.resolve(strict=False)

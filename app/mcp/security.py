@@ -13,6 +13,7 @@ from __future__ import annotations
 import fnmatch
 import re
 import shlex
+import stat
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -67,6 +68,21 @@ def is_protected(rel: str) -> bool:
     return any(fnmatch.fnmatchcase(parts[-1], glob) for glob in FORBIDDEN_FILE_GLOBS)
 
 
+def has_other_names(path: Path) -> bool:
+    """True for a regular file with more than one hard link.
+
+    Every hard link is an equal name for the same file, so a link planted in the repository can
+    be a second name for a file anywhere else on the same disk (``ln ~/.ssh/id_rsa notes.txt``).
+    Path checks can't see where the other names are, so such files are treated as protected.
+    Git never creates hard links in a checkout.
+    """
+    try:
+        info = path.stat()
+    except OSError:
+        return False
+    return stat.S_ISREG(info.st_mode) and info.st_nlink > 1
+
+
 def looks_binary(data: bytes) -> bool:
     return b"\x00" in data[:8192]
 
@@ -95,6 +111,8 @@ class PathGuard:
             raise PathViolation(f"'{rel}' is a protected file and cannot be accessed")
         if must_exist and not resolved.exists():
             raise PathViolation(f"'{rel}' does not exist")
+        if has_other_names(resolved):
+            raise PathViolation(f"'{rel}' is protected: it has more than one hard link, so it may be another name for a file outside the repository")
         if for_write:
             if rel == ".":
                 raise PathViolation("cannot write to the repository root")
@@ -135,7 +153,7 @@ class PathGuard:
                 if entry.is_dir():
                     if entry.name not in SKIP_WALK_DIRS:
                         stack.append(entry)
-                elif entry.is_file():
+                elif entry.is_file() and not has_other_names(entry):
                     yield entry
 
 

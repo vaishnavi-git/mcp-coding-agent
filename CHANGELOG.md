@@ -31,6 +31,10 @@
   version got all 9 replays right (three recorded drafts, three times each).
 - `scripts/replay_summary_check.py` runs the current summary check again on drafts from recorded
   runs, without running the agent.
+- Hard links are covered by the path checks: a file with more than one hard link is refused for
+  reading, writing, search, the diff, commits and the sandbox copy, because another of its
+  names could be a file outside the repository. Changes to protected tracked files are left out
+  of the diff too.
 - Docker Compose works, checked for the first time on macOS. Fixed: the app image failed to
   build with a group ID that already exists in the base image, such as macOS's usual group 20.
   New: `WORKSPACES_DIR` lets the sample repositories live outside cloud-synced folders.

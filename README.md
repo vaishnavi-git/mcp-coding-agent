@@ -97,7 +97,8 @@ The short version:
 
 - Paths are resolved (symlinks included) and must stay inside the repository. `.env*`, `.git`, SSH
   and TLS keys and credential files can't be read, written, searched, diffed, committed or copied
-  into the sandbox, in any letter case.
+  into the sandbox, in any letter case. Files with more than one hard link are treated the same
+  way, since another name for them could be a file outside the repository.
 - The only command the sandbox runs is the configured test command (pytest, `node --test` or
   Maven), checked against an allowlist and a short list of options for each runner. Shell syntax,
   `rm`, `sudo`, `git push`, package installs, pytest `@argument-files`, Node's `--require` and
@@ -201,7 +202,7 @@ pytest -m path_traversal        # one test category
 pytest --cov=app
 ```
 
-There are 633 tests. With Docker running and the three sandbox images built they all pass; without
+There are 634 tests. With Docker running and the three sandbox images built they all pass; without
 Docker, the four tests that need it are skipped. CI builds all three images and runs the linter
 and the whole suite, Docker tests included, on every push
 ([.github/workflows/tests.yml](.github/workflows/tests.yml)).
@@ -231,7 +232,6 @@ Streamlit UI). [docs/TESTING.md](docs/TESTING.md) has the details.
 - JavaScript means Node's built-in test runner (not Jest or Mocha) and Java means Maven (not
   Gradle). Since tests run offline, a project's dependencies have to be baked into its sandbox
   image. The JavaScript and Java tasks have only had one live run each so far.
-- Path checks see symlinks but not hard links.
 - The UI has no automated tests.
 
 ## What's next

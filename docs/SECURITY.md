@@ -41,6 +41,9 @@ The person running the agent and approving its changes is trusted.
      letter case;
    - writes are limited to `WRITABLE_PATHS`;
    - search and the diff never follow links to protected files or out of the repository;
+   - a file with more than one hard link counts as protected, because any of its other names
+     could be a file outside the repository (git never creates hard links in a checkout);
+   - changes to tracked files that are protected, or hard-linked, are left out of the diff;
    - no tool deletes files.
 4. **Command policy.** The sandbox accepts only allowlisted test commands with in-repository paths.
    It refuses shell syntax, `rm`, `sudo`, `git push`, force flags, network tools, package installs
@@ -105,7 +108,7 @@ The person running the agent and approving its changes is trusted.
 | Test commands must use an allowlist | `validate_test_command` | `tests/test_security.py::test_dangerous_commands_are_rejected`, `tests/test_command_policy.py::test_allowlist_bypass_attempts_are_rejected`, `tests/test_command_policy.py::test_a_dangerous_configured_test_command_is_rejected_too` |
 | File paths must be restricted to the approved repository | `PathGuard.resolve` in every path-taking tool | `tests/test_access_control.py::test_traversal_is_rejected_by_every_path_taking_tool`, `tests/test_security.py::test_writable_paths_are_enforced` |
 | The agent must prevent path traversal | Symlinks resolved before the containment check; links out of the repository never followed | `tests/test_security.py::test_path_traversal_is_rejected`, `tests/test_security.py::test_symlink_escape_is_rejected`, `tests/test_access_control.py::test_odd_spellings_stay_inside_the_repository` |
-| The agent must not read .env files, SSH keys, or files outside the repository | Protected names in any case, in reads, search, diffs, commits and the sandbox copy | `tests/test_security.py::test_forbidden_files_are_rejected`, `tests/test_access_control.py::test_protected_names_are_matched_in_any_letter_case`, `tests/test_access_control.py::test_search_never_returns_protected_content`, `tests/test_access_control.py::test_code_running_in_the_sandbox_cannot_read_protected_files` |
+| The agent must not read .env files, SSH keys, or files outside the repository | Protected names in any case, in reads, search, diffs, commits and the sandbox copy; files with several hard links count as protected | `tests/test_access_control.py::test_hard_links_to_files_outside_the_repository_are_blocked`, `tests/test_security.py::test_forbidden_files_are_rejected`, `tests/test_access_control.py::test_protected_names_are_matched_in_any_letter_case`, `tests/test_access_control.py::test_search_never_returns_protected_content`, `tests/test_access_control.py::test_code_running_in_the_sandbox_cannot_read_protected_files` |
 | All tool calls must be logged | The hub logs every call and retry; the tool loop logs refused calls | `tests/test_mcp_client.py::test_valid_and_invalid_calls_are_logged_and_redacted`, `tests/test_tool_contracts.py::test_rejected_model_calls_are_logged_and_never_reach_a_server`, `tests/test_tool_contracts.py::test_every_tool_has_a_valid_call_that_succeeds_and_is_logged` |
 
 ### Blocked actions
@@ -185,9 +188,12 @@ holes. All are fixed and covered by tests (details in [TESTING.md](TESTING.md#pr
   of scope.
 - **DNS rebinding.** The docs reader resolves a host before connecting, so a fast-changing DNS
   answer could in principle reach a private address. The URL allowlist is the main control.
-- **Hard links.** The path guard sees symlinks but not hard links. A hard link placed in the
-  repository by someone with access to it could expose a file elsewhere on the same disk. No
-  tool can create links.
+- **Hard links, partly.** A file with more than one hard link is refused everywhere, since its
+  other names can't be seen. What's left: if the other name is deleted, the file has only its
+  name in the repository and is an ordinary repository file. Whoever could do that could just as
+  well have copied the contents in, so the guard can't help there; the control is who may write
+  to the repository. No tool can create links. Some package managers (pnpm) store
+  dependencies as hard links; those live in `node_modules`, which search already skips.
 - **Human approval is the last line.** A reviewer who approves without reading can approve a
   harmful patch. The checkpoint shows exact diffs and the files outside the plan, but it cannot
   judge them.
