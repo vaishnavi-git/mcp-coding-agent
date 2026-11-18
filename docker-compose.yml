@@ -33,7 +33,7 @@ services:
       # container by path, so this directory has the same path on the host and here.
       SANDBOX_WORK_DIR: ${SANDBOX_WORK_DIR:-/tmp/mcp-agent-sandbox}
     volumes:
-      - ./workspaces:/app/workspaces
+      - ${WORKSPACES_DIR:-./workspaces}:/app/workspaces  # outside cloud-synced folders, see docs/SETUP.md
       - ./data:/app/data
       - ${SANDBOX_WORK_DIR:-/tmp/mcp-agent-sandbox}:${SANDBOX_WORK_DIR:-/tmp/mcp-agent-sandbox}
       - /var/run/docker.sock:/var/run/docker.sock

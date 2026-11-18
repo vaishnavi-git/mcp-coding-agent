@@ -31,6 +31,9 @@
   version got all 9 replays right (three recorded drafts, three times each).
 - `scripts/replay_summary_check.py` runs the current summary check again on drafts from recorded
   runs, without running the agent.
+- Docker Compose works, checked for the first time on macOS. Fixed: the app image failed to
+  build with a group ID that already exists in the base image, such as macOS's usual group 20.
+  New: `WORKSPACES_DIR` lets the sample repositories live outside cloud-synced folders.
 - `.env.example` now suggests `claude-sonnet-5-5`, after the benchmark showed it as accurate as
   Sonnet 5 on the sample tasks, a third cheaper and twice as fast.
 - Results: the first live JavaScript and Java runs, and Haiku 5.5 for the investigate step

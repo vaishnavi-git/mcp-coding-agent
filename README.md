@@ -216,7 +216,8 @@ Streamlit UI). [docs/TESTING.md](docs/TESTING.md) has the details.
 
 - It hasn't been pointed at a real github.com repository yet. API mode is tested against a local
   `file://` remote and a mocked GitHub API.
-- The Docker Compose setup hasn't been run.
+- Docker Compose has been checked on macOS with Docker Desktop, including a sandbox test run
+  started from the API container, but not on Linux and not with a full model run.
 - There's no authentication on the API or UI, so they only listen on 127.0.0.1. The Compose setup
   gives the API container the Docker socket, which is root-equivalent on the host.
 - It's a single process. Runs waiting for approval survive a restart, and runs that were mid-step

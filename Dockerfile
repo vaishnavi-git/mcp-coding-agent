@@ -22,11 +22,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
+# On macOS the user's group is usually 20, which Debian already has (dialout), so an existing
+# group with that ID is reused rather than created.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
-    && groupadd --gid "${GID}" agent \
-    && useradd --create-home --uid "${UID}" --gid "${GID}" agent
+    && (getent group "${GID}" >/dev/null || groupadd --gid "${GID}" agent) \
+    && useradd --non-unique --create-home --uid "${UID}" --gid "${GID}" agent
 
 COPY --from=docker-cli /usr/local/bin/docker /usr/local/bin/docker
 
@@ -39,7 +41,7 @@ COPY scripts ./scripts
 # Editable install: the app finds config/ and examples/ relative to /app.
 RUN pip install -e ".[ui]" \
     && mkdir -p /app/data /app/workspaces \
-    && chown agent:agent /app/data /app/workspaces
+    && chown "${UID}:${GID}" /app/data /app/workspaces
 
 USER agent
 EXPOSE 8000 8501

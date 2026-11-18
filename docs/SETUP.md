@@ -98,15 +98,26 @@ Things to know:
   daemon then bind-mounts the copy into the test container *by host path*. That only works if
   the directory has the same path on the host and in the API container, which is how the compose
   file mounts it. Create it before the first `up`: if Docker creates it, root owns it.
-- **User IDs.** Build with your own user and group IDs (`UID`, `GID` in `.env`), so the
-  container can run git on the mounted repository without "dubious ownership" errors.
+- **User IDs.** Build with your own user and group IDs (`UID`, `GID` in `.env`, or
+  `UID=$(id -u) GID=$(id -g) docker compose build`), so the container can run git on the mounted
+  repository without "dubious ownership" errors. On macOS your group is usually 20, which the
+  image already has, and that's handled.
 - **`DOCKER_GID`.** The group that owns the socket on the host. On Linux:
-  `stat -c %g /var/run/docker.sock`.
+  `stat -c %g /var/run/docker.sock`. With Docker Desktop the default (0) works.
 - **Run the setup script inside the container.** The sample repository's `origin` is an
-  absolute path, so it must be created where the API will use it.
+  absolute path, so it must be created where the API will use it. From a script or CI, add `-T`
+  (`docker compose run --rm -T api ...`): without a terminal, `run` otherwise waits forever.
+- **Cloud-synced folders.** If the project lives in a folder that iCloud Drive (or a similar
+  service) syncs, such as a synced Desktop, the service creates conflict copies like `refs 2`
+  inside the sample repositories' `.git` folders and can corrupt them. Set `WORKSPACES_DIR` to a
+  folder outside it, for example `WORKSPACES_DIR=$HOME/mcp-agent-workspaces docker compose up`.
+  Better still, keep the whole project outside synced folders.
 
-The compose setup has not been run in this project's environment (Docker was not available); see
-[Known limitations](../README.md#known-limitations).
+Checked on macOS with Docker Desktop (engine 29.9.3, Compose 5.7): the build, the sample setup in
+the container, `up`, the API's health check, all four MCP servers starting in the API container,
+a test run in the sandbox started from the API container through the socket, git on the mounted
+repository, and the UI showing recorded runs. Not checked: Linux hosts, and a full run with a
+model.
 
 ## Using a real GitHub repository
 
