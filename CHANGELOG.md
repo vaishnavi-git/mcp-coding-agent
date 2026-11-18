@@ -35,6 +35,8 @@
   reading, writing, search, the diff, commits and the sandbox copy, because another of its
   names could be a file outside the repository. Changes to protected tracked files are left out
   of the diff too.
+- The Streamlit UI has automated tests: Streamlit's `AppTest` drives the page against the real API
+  and workflow (start, approve, edit and publish, reject, retry a failed run, API down).
 - Docker Compose works, checked for the first time on macOS. Fixed: the app image failed to
   build with a group ID that already exists in the base image, such as macOS's usual group 20.
   New: `WORKSPACES_DIR` lets the sample repositories live outside cloud-synced folders.

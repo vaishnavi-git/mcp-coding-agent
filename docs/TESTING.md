@@ -17,7 +17,7 @@ uses the local `node` in place of Docker and is skipped if there isn't one.
 
 ## Last full run
 
-634 tests. With Docker running and the three sandbox images built, all 634 pass; this was checked
+639 tests. With Docker running and the three sandbox images built, all 639 pass; this was checked
 on macOS on Apple silicon with Docker Desktop (engine 29.9.3). Without Docker, the four
 real-Docker tests are skipped. A run takes about two and a half minutes on a laptop.
 
@@ -42,8 +42,9 @@ Coverage from `pytest --cov=app` (line and branch combined):
 
 | Scope | Coverage |
 |---|---|
-| The whole `app` package | 87% |
-| Without the Streamlit UI (no automated tests; checked by hand) | 92% |
+| The whole `app` package | 91% |
+| The Streamlit UI | 71% |
+| Everything but the UI | 92% |
 | Security-critical modules (path guard, filesystem, sandbox, patching, tool loop, MCP hub) | 93% |
 | Evaluation package | 89% |
 
@@ -111,6 +112,11 @@ category files isn't listed anywhere.
   as a script), the API can't answer as the evaluator, the review policy, a scripted run reviewed
   and judged end to end, and the hidden acceptance tests themselves: in each language they pass on
   a right fix and fail on the code as shipped and on two kinds of wrong fix (Java in real Docker).
+- **The UI.** Streamlit's `AppTest` drives the real page while its HTTP calls go into the real API
+  app: the empty start page, a run from the Start button through approving the patch, editing
+  the pull request title and publishing (the edit reaches the pull request), rejecting a patch
+  (nothing is written), a failed run showing its code, hint and a working retry button, and an
+  API that can't be reached.
 - **The docs.** Every setting is in `.env.example`, every route is in `docs/API.md`,
   `openapi.json` is current, the README tool table and the workflow diagram match the code, links
   resolve, every test cited in `docs/SECURITY.md` exists, there's no model name or key in the

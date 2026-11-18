@@ -202,7 +202,7 @@ pytest -m path_traversal        # one test category
 pytest --cov=app
 ```
 
-There are 634 tests. With Docker running and the three sandbox images built they all pass; without
+There are 639 tests. With Docker running and the three sandbox images built they all pass; without
 Docker, the four tests that need it are skipped. CI builds all three images and runs the linter
 and the whole suite, Docker tests included, on every push
 ([.github/workflows/tests.yml](.github/workflows/tests.yml)).
@@ -210,8 +210,8 @@ and the whole suite, Docker tests included, on every push
 The tests are grouped by risk: path traversal, protected files, dangerous commands, patch
 application, GitHub failures and so on. Each group exercises every entry point rather than one
 module. That's how a few real holes turned up, for example `.ENV` getting past the `.env` check on
-macOS, and symlinks to `.env` leaking through search. Coverage is 87% overall (92% without the
-Streamlit UI). [docs/TESTING.md](docs/TESTING.md) has the details.
+macOS, and symlinks to `.env` leaking through search. Coverage is 91% overall, and 71% for the
+Streamlit UI. [docs/TESTING.md](docs/TESTING.md) has the details.
 
 ## Known limitations
 
@@ -232,7 +232,8 @@ Streamlit UI). [docs/TESTING.md](docs/TESTING.md) has the details.
 - JavaScript means Node's built-in test runner (not Jest or Mocha) and Java means Maven (not
   Gradle). Since tests run offline, a project's dependencies have to be baked into its sandbox
   image. The JavaScript and Java tasks have only had one live run each so far.
-- The UI has no automated tests.
+- The UI's tests drive the page against the real API, but not every checkpoint: plan approval
+  and recovery are tested in the workflow tests, not through the page.
 
 ## What's next
 
