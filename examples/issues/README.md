@@ -35,6 +35,29 @@ the same two issues for [../sample-repo-js](../sample-repo-js) and
 and the file the maintainer points at are in that language. With `PROJECT_LANGUAGE` detected from
 the repository, the matching file is used by default.
 
+## The harder sample: sample-shop.json
+
+[sample-shop.json](sample-shop.json) belongs to [../sample-shop](../sample-shop), a small checkout
+library with five modules. Its existing tests all pass; the bugs are in what they don't cover. The
+benchmark uses these issues to see how the agent does when the answer isn't spelled out.
+
+## #7: Checkout total is a cent too high for some orders
+
+Labels `bug`, `checkout`. The reporter blames `Money.percent` and asks for it to round down. That
+rounding is correct and coupons depend on it; the real cause is in `checkout.py`, which rounds the
+tax on every line and then adds the rounded amounts. A good fix taxes the taxable amount once.
+Following the reporter's suggestion fails the hidden tests.
+
+## #8: Coupons: the same code works twice, and lowercase codes are rejected
+
+Labels `bug`, `coupons`. Codes should ignore case and surrounding spaces, and a code already on the
+cart should do nothing. A fix that only refuses exact duplicates misses `save10` and `SAVE10 `.
+
+## #9: Buy 2, get 1 free gives the wrong item away
+
+Labels `bug`, `promotions`. The promotion gives away items in the order they were added; the terms
+say the cheapest ones are free, in any order, counting quantities as separate items.
+
 ## Using your own issues
 
 Add entries with the same fields to this file (or point `GITHUB_ISSUES_FILE` at another file).

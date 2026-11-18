@@ -112,5 +112,8 @@ cheaper and twice as fast. What it pointed at next:
 - **Try Haiku 5.5 for investigation (done).** On the Python tasks it cut investigation cost by
   about 94% and the total to $0.075 a run, with all 6 runs passing. Next is trying it on harder
   tasks before making it the default.
-- **Run the benchmark on the JavaScript and Java tasks (done, once each).** All 4 passed. More
-  runs, and harder tasks than the sample, are what the benchmark needs next.
+- **Run the benchmark on the JavaScript and Java tasks (done, once each).** All 4 passed.
+- **Harder tasks (built, not yet run).** A second Python sample, a checkout library with five
+  modules, and three issues: a bug report that blames the wrong module, a fix with easy-to-miss edge
+  cases, and a rule to follow exactly. Next is running them, with Sonnet 5.5 and with Haiku 5.5
+  for investigation, before deciding on Haiku as a default.

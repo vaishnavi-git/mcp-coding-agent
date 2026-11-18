@@ -28,7 +28,8 @@ from app.evaluation.benchmark import (
     task_settings,
 )
 from app.evaluation.report import render_markdown
-from app.evaluation.trials import STARTING_POINTS
+from app.evaluation.trials import STARTING_POINTS, prepare_trial
+from app.languages import SAMPLES
 from app.mcp.sandbox_server import DockerRunner
 from app.sample_repo import setup_sample_repo
 from app.storage.audit import AuditStore
@@ -56,9 +57,10 @@ def base(tmp_path: Path, workspaces: Path) -> Settings:
 
 
 def test_every_task_has_its_acceptance_test_and_a_valid_language() -> None:
-    assert set(TASKS) == {f"{lang}-{n}" for lang in ("python", "javascript", "java") for n in (42, 43)}
+    assert set(TASKS) == {f"{lang}-{n}" for lang in ("python", "javascript", "java") for n in (42, 43)} | {"shop-7", "shop-8", "shop-9"}
     for task in TASKS.values():
         assert task.acceptance.is_file() and task.language in ("python", "javascript", "java")
+        assert task.sample is None or task.sample in SAMPLES
     with pytest.raises(ValueError, match="unknown task"):
         load_tasks(only=["python-99"])
 
@@ -221,3 +223,78 @@ def test_the_tasks_file_is_valid_json_with_known_commands() -> None:
     data = json.loads((PROJECT_ROOT / "examples" / "eval" / "tasks.json").read_text())
     for task in data["tasks"]:
         assert task["command"].split()[0] in ("pytest", "node", "mvn")
+
+
+
+# --------------------------------------------------------------------------- the harder shop tasks
+
+# Right and wrong fixes for each shop issue: (file, old text, new text).
+SHOP_FIXES = {
+    7: {
+        "right": ("shop/checkout.py", """    tax = ZERO
+    for line in cart.lines:
+        if line.product.taxable:
+            tax += line.total.percent(TAX_RATE)
+""", """    taxable = sum((line.total for line in cart.lines if line.product.taxable), ZERO)
+    tax = taxable.percent(TAX_RATE)
+"""),
+        # what the reporter suggested: round down in Money.percent
+        "wrong": ("shop/money.py", "from decimal import ROUND_HALF_UP, Decimal", "from decimal import ROUND_DOWN as ROUND_HALF_UP, Decimal"),
+    },
+    8: {
+        "right": ("shop/cart.py", """    def apply_coupon(self, code: str) -> None:
+        self.coupons.append(code)""", """    def apply_coupon(self, code: str) -> None:
+        code = code.strip().upper()
+        if code not in self.coupons:
+            self.coupons.append(code)"""),
+        # duplicates refused, but spelling not normalized
+        "wrong": ("shop/cart.py", """    def apply_coupon(self, code: str) -> None:
+        self.coupons.append(code)""", """    def apply_coupon(self, code: str) -> None:
+        if code not in self.coupons:
+            self.coupons.append(code)"""),
+    },
+    9: {
+        "right": ("shop/discounts.py", "    free = len(units) // 3\n", "    free = len(units) // 3\n    units.sort()\n"),
+        # sorted, but the wrong way round
+        "wrong": ("shop/discounts.py", "    free = len(units) // 3\n", "    free = len(units) // 3\n    units.sort(reverse=True)\n"),
+    },
+}
+
+
+def shop_variant(tmp_path: Path, name: str, change: tuple[str, str, str] | None) -> Path:
+    repo = setup_sample_repo(tmp_path / name, sample="sample-shop", with_origin=False)
+    if change:
+        rel, old, new = change
+        text = (repo / rel).read_text()
+        assert text.count(old) == 1, (rel, old)
+        (repo / rel).write_text(text.replace(old, new))
+    return repo
+
+
+@pytest.mark.parametrize("issue", [7, 8, 9])
+def test_shop_acceptance_tests_tell_right_fixes_from_wrong_ones(tmp_path: Path, issue: int) -> None:
+    sandbox = LocalPytestRunner()
+    task = TASKS[f"shop-{issue}"]
+    results = {
+        name: run_acceptance(task, shop_variant(tmp_path, name, SHOP_FIXES[issue].get(name)), sandbox)["status"]
+        for name in ("as shipped", "right", "wrong")
+    }
+    assert results == {"as shipped": "FAILED", "right": "PASSED", "wrong": "FAILED"}
+
+
+def test_the_shop_sample_passes_its_own_tests_as_shipped_and_after_every_right_fix(tmp_path: Path) -> None:
+    # The bugs hide behind green tests, as in real projects: the agent has to find them from the issue.
+    sandbox = LocalPytestRunner()
+    for issue in (None, 7, 8, 9):
+        repo = shop_variant(tmp_path, f"own-{issue}", SHOP_FIXES[issue]["right"] if issue else None)
+        result = sandbox.run(repo, ["pytest", "-q", "-p", "no:cacheprovider"])
+        assert result.exit_code == 0, (issue, result.stdout[-500:])
+
+
+def test_shop_tasks_use_their_own_sample_and_issues(base: Settings, workspaces: Path) -> None:
+    settings = task_settings(base, TASKS["shop-8"], workspaces)
+    assert settings.repo_path == workspaces / "sample-shop" and settings.writable_paths == ("shop", "tests")
+    assert settings.github_issues_file.name == "sample-shop.json" and settings.test_command.startswith("pytest")
+    check_allowed(settings, workspaces)
+    done = prepare_trial(8, settings.repo_path, settings.data_dir, language="python", sample="sample-shop")
+    assert (settings.repo_path / "shop" / "checkout.py").is_file() and done["starting_commits"] == []

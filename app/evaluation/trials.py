@@ -80,11 +80,15 @@ def archive_pull_requests(data_dir: Path) -> Path | None:
     return target
 
 
-def prepare_trial(issue: int, repo: Path, data_dir: Path, language: str = "python") -> dict[str, object]:
-    """Reset ``repo`` and ``data_dir`` for a trial of ``issue``; returns what was done."""
-    repo = setup_sample_repo(Path(repo), force=True, language=language)
+def prepare_trial(issue: int, repo: Path, data_dir: Path, language: str = "python", sample: str | None = None) -> dict[str, object]:
+    """Reset ``repo`` and ``data_dir`` for a trial of ``issue``; returns what was done.
+
+    ``sample`` picks a bundled sample other than the language's default; starting points
+    only exist for the default samples.
+    """
+    repo = setup_sample_repo(Path(repo), force=True, language=language, sample=sample)
     commits = []
-    for rel, old, new, message in STARTING_POINTS.get((language, issue), []):
+    for rel, old, new, message in STARTING_POINTS.get((language, issue), []) if sample is None else []:
         path = repo / rel
         text = path.read_text()
         if text.count(old) != 1:

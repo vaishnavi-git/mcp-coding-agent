@@ -129,9 +129,16 @@ carefully. `scripts/run_benchmark.py` runs the sample tasks with an automatic re
 judges each result with tests the agent never sees. It is only for evaluation.
 
 **Tasks.** [examples/eval/tasks.json](../examples/eval/tasks.json) lists issues #42 and #43 in
-Python, JavaScript and Java. Each task has a hidden acceptance test in
-[examples/eval/acceptance/](../examples/eval/acceptance) that checks the behavior the issue asks
-for through the library's public API, so any reasonable fix passes it.
+Python, JavaScript and Java, and three harder Python tasks on a separate
+[shop sample](../examples/sample-shop) (`shop-7`, `shop-8`, `shop-9`). Each task has a hidden
+acceptance test in [examples/eval/acceptance/](../examples/eval/acceptance) that checks the behavior
+the issue asks for through the library's public API, so any reasonable fix passes it.
+
+The shop tasks are harder in ways the first ones weren't. The code is spread over five modules and
+all of its own tests pass, so no failing test points at the bug. Issue #7 blames the wrong module and
+suggests a fix that would make things worse; #8 has edge cases (case, spaces, repeats) that a quick
+fix misses; #9 needs a rule from the issue applied exactly. For each one, a test checks that the
+hidden tests fail on the code as shipped, pass on a right fix, and fail on a plausible wrong one.
 
 **What it does for each run:**
 1. prepares the sample the same way `prepare_trial.py` does (issue #43 starts with #42 fixed);

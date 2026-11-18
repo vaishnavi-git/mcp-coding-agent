@@ -30,7 +30,7 @@ from typing import Any
 from app.agents.runner import AgentRunner
 from app.config import PROJECT_ROOT, Settings
 from app.evaluation.trials import prepare_trial
-from app.languages import PROFILES, runner_for
+from app.languages import PROFILES, SAMPLES, runner_for
 from app.mcp.sandbox_server import DockerRunner, SandboxRunner, copy_repository, format_result
 from app.reliability.test_results import parse_output
 
@@ -52,12 +52,13 @@ class Task:
     acceptance: Path  # the hidden test file
     install_as: str  # where it goes in the repository copy
     command: str  # how to run it
+    sample: str | None = None  # a bundled sample other than the language's default
 
 
 def load_tasks(path: Path = TASKS_FILE, only: list[str] | None = None) -> list[Task]:
     data = json.loads(Path(path).read_text())
     tasks = [
-        Task(t["id"], t["language"], int(t["issue"]), Path(path).parent / "acceptance" / t["acceptance"], t["install_as"], t["command"])
+        Task(t["id"], t["language"], int(t["issue"]), Path(path).parent / "acceptance" / t["acceptance"], t["install_as"], t["command"], t.get("sample"))
         for t in data["tasks"]
     ]
     if only:
@@ -69,15 +70,16 @@ def load_tasks(path: Path = TASKS_FILE, only: list[str] | None = None) -> list[T
 
 
 def task_settings(base: Settings, task: Task, workspaces: Path = PROJECT_ROOT / "workspaces") -> Settings:
-    """Settings for one task: the language's sample, test command, image and fixture issues."""
+    """Settings for one task: its sample, the language's test command and image, and the fixture issues."""
     profile = PROFILES[task.language]
+    sample = SAMPLES[task.sample or profile.sample]
     return dataclasses.replace(
         base,
-        repo_path=Path(workspaces) / profile.sample,
+        repo_path=Path(workspaces) / sample.name,
         project_language=task.language,
-        writable_paths=profile.sample_writable_paths,
-        github_repository=f"demo/{profile.sample}",
-        github_issues_file=PROJECT_ROOT / "examples" / "issues" / profile.issues_file,
+        writable_paths=sample.writable_paths,
+        github_repository=f"demo/{sample.name}",
+        github_issues_file=PROJECT_ROOT / "examples" / "issues" / sample.issues_file,
         test_command=profile.test_command,
         test_command_allowlist=profile.test_command_allowlist,
         sandbox_image=profile.sandbox_image,
@@ -91,9 +93,9 @@ def check_allowed(settings: Settings, workspaces: Path = PROJECT_ROOT / "workspa
         raise BenchmarkRefused(
             f"the benchmark approves its own pull requests, so it only runs with GITHUB_MODE=fixture (this is {settings.github_mode!r})"
         )
-    allowed = {(Path(workspaces) / p.sample).resolve() for p in PROFILES.values()}
+    allowed = {(Path(workspaces) / name).resolve() for name in SAMPLES}
     if Path(settings.repo_path).resolve() not in allowed:
-        names = ", ".join(sorted(f"workspaces/{p.sample}" for p in PROFILES.values()))
+        names = ", ".join(sorted(f"workspaces/{name}" for name in SAMPLES))
         raise BenchmarkRefused(f"the benchmark only runs on the bundled sample repositories ({names}), not {settings.repo_path}")
 
 
@@ -135,7 +137,7 @@ async def run_task(
 ) -> dict[str, Any]:
     """One benchmark run of ``task``: prepare the sample, run the agent with the evaluator, judge the result."""
     check_allowed(settings, workspaces)
-    prepare_trial(task.issue, settings.repo_path, settings.data_dir, language=task.language)
+    prepare_trial(task.issue, settings.repo_path, settings.data_dir, language=task.language, sample=task.sample)
     runner = runner or AgentRunner(settings)
     view = await runner.start(task.issue)
     run_id = view["run"]["id"]

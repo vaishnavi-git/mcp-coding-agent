@@ -1,0 +1,46 @@
+{
+  "repository": "demo/sample-shop",
+  "issues": [
+    {
+      "number": 7,
+      "title": "Checkout total is a cent too high for some orders",
+      "state": "open",
+      "labels": [
+        "bug",
+        "checkout"
+      ],
+      "author": "support-team",
+      "body": "Customers keep telling us our totals are one cent higher than the receipt from the till.\n\n## Example\nA blue pen, a red pen and a black pen, $0.10 each (all taxable). Checkout shows tax of **$0.03**, but 8.25% of $0.30 is $0.02475, which is $0.02.\n\nAnother one: a mug ($8.00) plus the same three pens. We charge $0.69 tax; the till charges $0.68.\n\n## What I think is wrong\nI'm pretty sure `Money.percent` rounds the wrong way. It should round down, not up.\n\n## Expected\nTax on an order should be 8.25% of the order's taxable amount, rounded to the nearest cent.",
+      "comments": []
+    },
+    {
+      "number": 8,
+      "title": "Coupons: the same code works twice, and lowercase codes are rejected",
+      "state": "open",
+      "labels": [
+        "bug",
+        "coupons"
+      ],
+      "author": "qa-bot",
+      "body": "Two problems with coupon codes.\n\n1. Entering `SAVE10` twice gives 20% off instead of 10%.\n2. Entering `save10`, or ` SAVE10` with a space pasted in front, fails at checkout with `UnknownCoupon`.\n\n## Expected\n- Codes are not case-sensitive and ignore spaces around them.\n- Entering a code that is already on the cart does nothing.\n- Different codes still stack (SAVE10 + WELCOME5 = 15% off), and codes that don't exist are still refused.",
+      "comments": []
+    },
+    {
+      "number": 9,
+      "title": "Buy 2, get 1 free gives the wrong item away",
+      "state": "open",
+      "labels": [
+        "bug",
+        "promotions"
+      ],
+      "author": "store-manager",
+      "body": "A customer bought one pair of red socks ($6) and two pairs of wool socks ($15). The promotion took $15 off, but it should have been $6.\n\nFrom the promotion terms: *if a cart has N items from the promotion, the N / 3 (rounded down) cheapest of them are free.* It shouldn't matter what order things were added to the cart in.",
+      "comments": [
+        {
+          "author": "store-manager",
+          "body": "Also seen with six pairs: we gave away a $15 pair and a $6 pair instead of two $6 pairs."
+        }
+      ]
+    }
+  ]
+}

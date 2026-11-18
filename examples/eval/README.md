@@ -1,7 +1,8 @@
 # Benchmark tasks
 
 [tasks.json](tasks.json) lists the tasks `scripts/run_benchmark.py` runs: issues #42 and #43 of the
-sample repository in Python, JavaScript and Java. [acceptance/](acceptance) holds one hidden
+sample repository in Python, JavaScript and Java, and the harder issues #7, #8 and #9 of the
+[shop sample](../sample-shop) (`shop-7`, `shop-8`, `shop-9`). [acceptance/](acceptance) holds one hidden
 acceptance test per task. After a run, the benchmark copies it next to the agent's final code in a
 throwaway copy and runs it in that language's sandbox image.
 

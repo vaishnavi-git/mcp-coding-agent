@@ -35,6 +35,9 @@
   reading, writing, search, the diff, commits and the sandbox copy, because another of its
   names could be a file outside the repository. Changes to protected tracked files are left out
   of the diff too.
+- Harder benchmark tasks: a second Python sample (`examples/sample-shop`, a checkout library with
+  five modules) and three issues with hidden tests (`shop-7`, `shop-8`, `shop-9`). Benchmark tasks
+  and `setup_sample_repo.py --sample` can now use a sample other than the language's default.
 - The Streamlit UI has automated tests: Streamlit's `AppTest` drives the page against the real API
   and workflow (start, approve, edit and publish, reject, retry a failed run, API down).
 - Docker Compose works, checked for the first time on macOS. Fixed: the app image failed to

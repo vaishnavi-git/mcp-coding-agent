@@ -65,6 +65,23 @@ PROFILES: dict[str, LanguageProfile] = {
 ALIASES = {"py": "python", "js": "javascript", "node": "javascript"}
 
 
+@dataclass(frozen=True)
+class Sample:
+    """A bundled sample repository under examples/, with its fixture issues."""
+
+    name: str
+    language: str
+    issues_file: str  # under examples/issues/
+    writable_paths: tuple[str, ...]
+
+
+SAMPLES: dict[str, Sample] = {
+    **{p.sample: Sample(p.sample, name, p.issues_file, p.sample_writable_paths) for name, p in PROFILES.items()},
+    # A larger Python sample with harder issues, used by the benchmark.
+    "sample-shop": Sample("sample-shop", "python", "sample-shop.json", ("shop", "tests")),
+}
+
+
 def detect_language(repo: Path) -> str | None:
     """The first language whose marker file is at the root of ``repo``, in PROFILES order."""
     for name, profile in PROFILES.items():
